@@ -27,6 +27,22 @@
         { "id": "tunel_profundo", "nome": "Túnel Profundo", "producao_base": 729, "custo_base": 7.54e5, "crescimento": 1.18 },
         { "id": "nucleo", "nome": "Núcleo Rochoso", "producao_base": 2190, "custo_base": 4.9e6, "crescimento": 1.185 }
       ],
+      "mecanica": {
+        "tipo": "camadas",
+        "_regra": "A cada 'niveis_por_camada' níveis somados nas minas da Terra, você chega numa camada nova: +bonus de produção (créditos e barras) na Terra.",
+        "niveis_por_camada": 40,
+        "bonus_por_camada": 0.1,
+        "camadas": [
+          { "nome": "Solo", "fato": "O solo fértil leva centenas de anos pra formar poucos centímetros." },
+          { "nome": "Rocha Sedimentar", "fato": "Rochas sedimentares guardam fósseis de milhões de anos." },
+          { "nome": "Lençol Freático", "fato": "Boa parte da água doce do planeta está escondida debaixo da terra." },
+          { "nome": "Rocha Ígnea", "fato": "Rochas ígneas nascem de magma que esfriou, como o granito." },
+          { "nome": "Crosta Profunda", "fato": "A crosta terrestre tem de 5 a 70 km de espessura." },
+          { "nome": "Poço de Kola", "fato": "O buraco mais fundo já cavado pelo ser humano tem cerca de 12 km." },
+          { "nome": "Descontinuidade de Moho", "fato": "Moho é a fronteira entre a crosta e o manto da Terra." },
+          { "nome": "Manto", "fato": "O manto tem quase 3 mil km de espessura e se move bem devagar." }
+        ]
+      },
       "refinaria": { "barras_por_segundo_base": 0.2, "custo_base": 300, "crescimento": 1.2 },
       "nave": {
         "destino": "lua",
@@ -48,6 +64,16 @@
         { "id": "lado_oculto", "nome": "Lado Oculto", "producao_base": 1.09e6, "custo_base": 1.51e9, "crescimento": 1.18 },
         { "id": "manto", "nome": "Manto Lunar", "producao_base": 3.28e6, "custo_base": 9.8e9, "crescimento": 1.185 }
       ],
+      "mecanica": {
+        "tipo": "fragmentos",
+        "_regra": "Com você na Lua, fragmentos de titânio aparecem quicando a cada intervalo_min-intervalo_max segundos e somem depois de vida_segundos. Tocar dá barras = segundos_de_barras da refinaria da Lua (mínimo barras_minimas).",
+        "intervalo_min": 12,
+        "intervalo_max": 22,
+        "vida_segundos": 6,
+        "segundos_de_barras": 30,
+        "barras_minimas": 10,
+        "fato": "Na Lua a gravidade é 1/6 da Terra: tudo quica e flutua mais."
+      },
       "refinaria": { "barras_por_segundo_base": 0.1, "custo_base": 5.0e4, "crescimento": 1.2 },
       "nave": {
         "destino": "marte",
@@ -69,6 +95,15 @@
         { "id": "calota", "nome": "Calota Polar", "producao_base": 2.19e9, "custo_base": 3.77e14, "crescimento": 1.18 },
         { "id": "nucleo_marciano", "nome": "Núcleo Marciano", "producao_base": 6.56e9, "custo_base": 2.45e15, "crescimento": 1.185 }
       ],
+      "mecanica": {
+        "tipo": "tempestade",
+        "_regra": "A cada ciclo_segundos vem uma tempestade de duracao_segundos que corta 'perda' da produção de Marte. Avisa aviso_segundos antes. Estando em Marte, o escudo anula a tempestade. Offline vale a perda média.",
+        "ciclo_segundos": 420,
+        "duracao_segundos": 90,
+        "aviso_segundos": 20,
+        "perda": 0.6,
+        "fato": "As tempestades de poeira de Marte podem cobrir o planeta inteiro por semanas."
+      },
       "refinaria": { "barras_por_segundo_base": 0.05, "custo_base": 1.0e10, "crescimento": 1.2 },
       "nave": {
         "destino": "em_breve",

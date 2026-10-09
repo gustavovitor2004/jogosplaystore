@@ -7,10 +7,13 @@ extends Control
 
 const ViagemPadrao := preload("res://scripts/viagens/viagem_padrao.gd")
 const PainelArvore := preload("res://scripts/ui/painel_arvore.gd")
+const Fragmento := preload("res://scripts/mecanicas/fragmento.gd")
 
 const INTERVALO_UI := 0.1
 const MODOS_COMPRA := [1, 10, -1]   # -1 = máximo que der
 const SEGUNDOS_AVISO := 4.0
+const SEGUNDOS_CURIOSIDADE := 8.0
+const COR_TEMPESTADE := Color(0.75, 0.3, 0.1, 0.22)
 
 var _modo_idx := 0
 var _acumulador := 0.0
@@ -31,6 +34,9 @@ var _linhas_minas: Array = []
 var _linha_ref: Dictionary = {}
 var _nave: Dictionary = {}
 var _aviso: Label
+var _mec: Dictionary = {}          # painel "Especial" do planeta
+var _camada_fragmentos: Control    # onde os fragmentos da Lua quicam
+var _tempestade: ColorRect         # tela avermelhada durante a tempestade
 var _painel_arvore: Control
 var _viagem: Control
 
@@ -41,6 +47,9 @@ func _ready() -> void:
 	Jogo.estado_mudou.connect(_atualizar)
 	Jogo.viagem_comecou.connect(_on_viagem_comecou)
 	Jogo.rebirth_feito.connect(_on_rebirth_feito)
+	Jogo.mecanicas.camada_alcancada.connect(_on_camada_alcancada)
+	Jogo.mecanicas.fragmento_surgiu.connect(_on_fragmento_surgiu)
+	Jogo.mecanicas.tempestade_mudou.connect(_on_tempestade_mudou)
 	_atualizar()
 	if Jogo.ganho_offline > 0.0:
 		_mostrar_aviso("Enquanto você estava fora, suas minas renderam %s créditos!" % Formatar.numero(Jogo.ganho_offline))
@@ -137,6 +146,18 @@ func _montar_layout() -> void:
 		resetar.pressed.connect(Jogo.resetar)
 		coluna.add_child(resetar)
 
+	_tempestade = ColorRect.new()
+	_tempestade.color = COR_TEMPESTADE
+	_tempestade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tempestade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tempestade.visible = false
+	add_child(_tempestade)
+
+	_camada_fragmentos = Control.new()
+	_camada_fragmentos.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_camada_fragmentos.mouse_filter = Control.MOUSE_FILTER_IGNORE   # só os fragmentos pegam toque
+	add_child(_camada_fragmentos)
+
 	_painel_arvore = PainelArvore.new()
 	_painel_arvore.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_painel_arvore)
@@ -168,8 +189,11 @@ func _reconstruir() -> void:
 	for filho in _lista.get_children():
 		filho.queue_free()
 	_linhas_minas.clear()
+	for fragmento in _camada_fragmentos.get_children():   # fragmentos da Lua não seguem você
+		fragmento.queue_free()
 	var p := Jogo.planeta_atual
 	_lbl_planeta.text = Economia.planetas[p]["nome"]
+	_criar_painel_mecanica(p)
 	_lista.add_child(_titulo_secao("Minas"))
 	for i in Economia.planetas[p]["minas"].size():
 		_linhas_minas.append(_criar_linha(_on_comprar_mina.bind(p, i)))
@@ -200,6 +224,30 @@ func _criar_linha(ao_comprar: Callable) -> Dictionary:
 	botao.pressed.connect(ao_comprar)
 	linha.add_child(botao)
 	return {"nome": nome, "info": info, "botao": botao}
+
+
+## Painel "Especial" no topo da lista: mostra a mecânica própria do planeta.
+func _criar_painel_mecanica(p: int) -> void:
+	_mec = {}
+	if Jogo.mecanicas.tipo(p) == "":
+		return
+	_lista.add_child(_titulo_secao("Especial de %s" % Economia.planetas[p]["nome"]))
+	var painel := PanelContainer.new()
+	_lista.add_child(painel)
+	var coluna := VBoxContainer.new()
+	coluna.add_theme_constant_override("separation", 8)
+	painel.add_child(coluna)
+	_mec = {
+		"titulo": Estilo.label(24, Estilo.COR_DESTAQUE),
+		"info": Estilo.paragrafo(20, Estilo.COR_TEXTO_FRACO),
+		"barra": ProgressBar.new(),
+		"botao": Estilo.botao("", 72),
+	}
+	_mec["barra"].show_percentage = false
+	_mec["barra"].custom_minimum_size = Vector2(0, 14)
+	_mec["botao"].pressed.connect(_on_escudo)
+	for chave in ["titulo", "info", "barra", "botao"]:
+		coluna.add_child(_mec[chave])
 
 
 func _criar_painel_nave() -> void:
@@ -267,6 +315,65 @@ func _atualizar() -> void:
 	_preencher_botao(_linha_ref["botao"], Jogo.orcamento_refinaria(p, modo), nivel_ref == 0)
 
 	_atualizar_nave(p)
+	_atualizar_mecanica(p)
+
+
+func _atualizar_mecanica(p: int) -> void:
+	var mec: Mecanicas = Jogo.mecanicas
+	var marte := mec.planeta_com("tempestade")
+	_tempestade.visible = p == marte and mec.tempestade_ativa_em(marte)
+	if _mec.is_empty():
+		return
+	var c := mec.config(p)
+	var barra: ProgressBar = _mec["barra"]
+	var botao: Button = _mec["botao"]
+	match mec.tipo(p):
+		"camadas":
+			var prog := mec.progresso_camadas(p)
+			var nomes: Array = c["camadas"]
+			var bonus := int(round(float(c["bonus_por_camada"]) * prog["camada"] * 100.0))
+			_mec["titulo"].text = "Profundidade: %s" % (nomes[prog["camada"] - 1]["nome"] if prog["camada"] > 0 else "Superfície")
+			if prog["camada"] < prog["total"]:
+				_mec["info"].text = "Camada %d de %d  ·  +%d%% na Terra
+Próxima: %s (%d / %d níveis nas minas)" % [
+					prog["camada"], prog["total"], bonus, nomes[prog["camada"]]["nome"], prog["niveis"], prog["proxima"],
+				]
+				var anterior: int = int(prog["camada"]) * int(c["niveis_por_camada"])
+				barra.max_value = prog["proxima"] - anterior
+				barra.value = prog["niveis"] - anterior
+			else:
+				_mec["info"].text = "Todas as %d camadas!  ·  +%d%% na Terra" % [prog["total"], bonus]
+				barra.max_value = 1
+				barra.value = 1
+			barra.visible = true
+			botao.visible = false
+		"fragmentos":
+			_mec["titulo"].text = "Gravidade baixa"
+			_mec["info"].text = "Fragmentos de titânio quicam pela tela de tempos em tempos. Toque neles antes que sumam pra ganhar barras!"
+			barra.visible = false
+			botao.visible = false
+		"tempestade":
+			var estado := mec.estado_tempestade(p)
+			var segundos := mec.segundos_tempestade(p)
+			var perda := int(float(c["perda"]) * 100.0)
+			barra.visible = false
+			botao.visible = estado != "limpo"
+			botao.disabled = not mec.pode_ativar_escudo()
+			if mec.escudo_ativo():
+				_mec["titulo"].text = "Escudo ativo!"
+				_mec["info"].text = "A tempestade não te atinge. (%s)" % Formatar.tempo(segundos)
+				botao.text = "Escudo ligado"
+			elif estado == "tempestade":
+				_mec["titulo"].text = "TEMPESTADE DE POEIRA!"
+				_mec["info"].text = "Produção de Marte -%d%%  ·  acaba em %s" % [perda, Formatar.tempo(segundos)]
+				botao.text = "ATIVAR ESCUDO"
+			elif estado == "aviso":
+				_mec["titulo"].text = "Tempestade chegando em %s!" % Formatar.tempo(segundos)
+				_mec["info"].text = "Ative o escudo pra não perder %d%% da produção." % perda
+				botao.text = "ATIVAR ESCUDO"
+			else:
+				_mec["titulo"].text = "Céu limpo"
+				_mec["info"].text = "Próxima tempestade em %s. Fique de olho: o escudo só funciona com você em Marte." % Formatar.tempo(segundos)
 
 
 func _preencher_botao(botao: Button, orcamento: Dictionary, liberar: bool) -> void:
@@ -312,9 +419,9 @@ func _atualizar_nave(p: int) -> void:
 		botao.text = "Juntando barras...  %d%%" % int(progresso * 100.0)
 
 
-func _mostrar_aviso(texto: String) -> void:
+func _mostrar_aviso(texto: String, segundos := SEGUNDOS_AVISO) -> void:
 	_aviso.text = texto
-	get_tree().create_timer(SEGUNDOS_AVISO).timeout.connect(func():
+	get_tree().create_timer(segundos).timeout.connect(func():
 		if _aviso.text == texto:
 			_aviso.text = "")
 
@@ -356,3 +463,33 @@ func _on_viagem_comecou(_de: int, para: int) -> void:
 
 func _on_rebirth_feito(poeira_ganha: int) -> void:
 	_mostrar_aviso("+%d Poeira Estelar! Nova expedição começando na Terra." % poeira_ganha)
+
+
+func _on_escudo() -> void:
+	if Jogo.mecanicas.ativar_escudo():
+		_atualizar()
+
+
+func _on_camada_alcancada(p: int, indice: int) -> void:
+	var camada: Dictionary = Jogo.mecanicas.config(p)["camadas"][indice]
+	_mostrar_aviso("Camada nova: %s! Curiosidade: %s" % [camada["nome"], camada["fato"]], SEGUNDOS_CURIOSIDADE)
+
+
+func _on_fragmento_surgiu(id: int) -> void:
+	var fragmento := Fragmento.new()
+	_camada_fragmentos.add_child(fragmento)
+	fragmento.iniciar(id, Jogo.mecanicas.vida_fragmento(), _camada_fragmentos.size)
+	fragmento.coletado.connect(_on_fragmento_coletado)
+
+
+func _on_fragmento_coletado(id: int) -> void:
+	var ganho := Jogo.mecanicas.coletar_fragmento(id)
+	if ganho > 0.0:
+		var lua := Jogo.mecanicas.planeta_com("fragmentos")
+		_mostrar_aviso("+%s %s" % [Formatar.numero(ganho), Economia.planetas[lua]["barra"]], 2.0)
+
+
+func _on_tempestade_mudou(estado: String) -> void:
+	var marte := Jogo.mecanicas.planeta_com("tempestade")
+	if estado == "aviso" and Jogo.planeta_atual == marte:
+		_mostrar_aviso("Tempestade de poeira chegando em Marte! Ative o escudo.")

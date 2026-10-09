@@ -36,6 +36,15 @@ Cada planeta tem:
 
 **Dependência:** a nave de cada planeta pede Barras do planeta anterior. Por isso vale a pena continuar melhorando a refinaria da Terra mesmo estando na Lua.
 
+### Mecânicas próprias de cada planeta
+| Planeta | Mecânica | Efeito na economia |
+|---------|----------|--------------------|
+| 🌍 Terra | **Camadas**: a cada 40 níveis somados nas minas, uma camada mais funda (Solo → Manto, 8 no total), com curiosidade real | +10% de produção da Terra por camada (até +80%) |
+| 🌙 Lua | **Gravidade baixa**: com você na Lua, um fragmento de titânio aparece quicando a cada 12–22 s e some em 6 s | Tocar dá 30 s de produção da refinaria da Lua em barras (mínimo 10). Bônus de quem joga ativo; o simulador não conta |
+| 🔴 Marte | **Tempestades de poeira**: a cada 7 min, 1 min e meio de tempestade (aviso 20 s antes) | −60% em Marte durante a tempestade. Com você em Marte, o **escudo** anula. Offline vale a perda média (~13%) |
+
+Os números ficam no bloco `"mecanica"` de cada planeta no `economia.json`. O simulador já considera as camadas e as tempestades: Lua em 8 min, Marte em 28 min, nave de Marte no dia 5.
+
 ## 3. Presença, colônias e offline
 
 | Situação | Produção |

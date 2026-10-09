@@ -53,6 +53,9 @@ var viajando := false
 var ganho_offline := 0.0       # pra tela mostrar "enquanto você estava fora..."
 var caminho_save := CAMINHO_SAVE  # os testes trocam por um arquivo próprio
 
+## Mecânicas especiais dos planetas (camadas, fragmentos, tempestades).
+var mecanicas: Mecanicas = null
+
 var _efeitos: Dictionary = {}  # soma dos efeitos da árvore, recalculada só quando ela muda
 var _tempo_autosave := 0.0
 var _tempo_auto_compra := 0.0
@@ -65,6 +68,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	mecanicas.tick(delta)
 	produzir(delta, true, 1.0)
 	if auto_compra_ativa():
 		_tempo_auto_compra += delta
@@ -91,6 +95,8 @@ func _notification(what: int) -> void:
 
 ## Jogo do zero: apaga também a Poeira e a árvore.
 func novo_jogo() -> void:
+	if mecanicas == null:
+		mecanicas = Mecanicas.new(self)
 	poeira = 0
 	poeira_total = 0
 	expedicoes = 0
@@ -122,6 +128,7 @@ func _nova_expedicao() -> void:
 	desbloqueados = 1
 	planeta_atual = 0
 	viajando = false
+	mecanicas.reiniciar()
 
 
 # ---------- árvore de habilidades ----------
@@ -211,9 +218,12 @@ func fazer_rebirth() -> int:
 # ---------- produção ----------
 
 func multiplicador_planeta(p: int, online := true) -> float:
+	var base: float
 	if online and p == planeta_atual:
-		return float(Economia.global["bonus_presenca"]) + efeito("bonus_presenca")
-	return 1.0 + efeito("producao_fora_de_presenca")   # Drones de Colônia
+		base = float(Economia.global["bonus_presenca"]) + efeito("bonus_presenca")
+	else:
+		base = 1.0 + efeito("producao_fora_de_presenca")   # Drones de Colônia
+	return base * mecanicas.fator_producao(p, online)
 
 
 ## Produção de uma mina num nível qualquer, com todos os bônus (menos presença).

@@ -22,6 +22,12 @@ static func numero(valor: float) -> String:
 	return _virgula("%.2f" % reduzido) + sufixo(grupo)
 
 
+## Segundos em "m:ss" (ex.: 200 -> "3:20").
+static func tempo(segundos: float) -> String:
+	var total := int(ceil(max(0.0, segundos)))
+	return "%d:%02d" % [total / 60, total % 60]
+
+
 ## Depois de "Dc" (10^33) vêm "aa", "ab", "ac"...
 static func sufixo(grupo: int) -> String:
 	if grupo < SUFIXOS.size():

@@ -62,7 +62,19 @@ class Jogo:
     # ---------- produção ----------
     def mult(self, p, online):
         pres = G["bonus_presenca"] if (online and p == self.atual) else 1.0
-        return pres * self.bonus
+        return pres * self.bonus * self.fator_mecanica(p, online)
+
+    def fator_mecanica(self, p, online):
+        """Mecânicas dos planetas (mesmas regras do jogo).
+        Terra: bônus por camada. Marte: tempestade (online e presente = usa o escudo;
+        senão, perda média). Lua (fragmentos) fica de fora: é bônus de quem joga ativo."""
+        mec = PLANETAS[p].get("mecanica", {})
+        if mec.get("tipo") == "camadas":
+            camadas = min(len(mec["camadas"]), sum(self.minas[p]) // mec["niveis_por_camada"])
+            return 1.0 + mec["bonus_por_camada"] * camadas
+        if mec.get("tipo") == "tempestade" and not (online and p == self.atual):
+            return 1.0 - mec["perda"] * mec["duracao_segundos"] / mec["ciclo_segundos"]
+        return 1.0
 
     def renda(self, online=True):
         return sum(

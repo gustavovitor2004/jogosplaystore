@@ -23,10 +23,12 @@ func _initialize() -> void:
 	_testar_nave()
 	_testar_offline()
 	_testar_save()
+	_testar_mecanicas()
 	_testar_arvore()
 	_testar_rebirth()
 	_testar_ritmo_inicial()
 	await _testar_viagem()
+	await _testar_telas()
 	print("")
 	if _falhas == 0:
 		print("TODOS OS TESTES PASSARAM (%d)" % _total)
@@ -297,3 +299,99 @@ func _testar_viagem() -> void:
 	_checar(not jogo.viajando and jogo.planeta_atual == 1, "depois de ~1 s chegou na Lua")
 	if FileAccess.file_exists(SAVE_TESTE):
 		DirAccess.remove_absolute(SAVE_TESTE)
+
+
+func _testar_mecanicas() -> void:
+	print("Mecânicas dos planetas:")
+	var jogo := _jogo_novo()
+	var mec = jogo.mecanicas
+
+	# Terra: camadas
+	jogo.minas[0] = [30, 25, 20, 10, 0, 0, 0, 0]   # 85 níveis = 2 camadas (40 cada)
+	_checar(mec.camadas(0) == 2 and _perto(mec.fator_producao(0, true), 1.2), "Terra: 85 níveis = 2 camadas = +20%")
+	var avisos := []
+	mec.camada_alcancada.connect(func(_p, indice): avisos.append(indice))
+	mec.tick(0.1)
+	_checar(avisos == [1], "Terra: avisa a camada nova (com curiosidade)")
+
+	# Marte: tempestade e escudo
+	var marte: int = mec.planeta_com("tempestade")
+	var c: Dictionary = mec.config(marte)
+	var inicio: float = float(c["ciclo_segundos"]) - float(c["duracao_segundos"])
+	jogo.desbloqueados = 3
+	jogo.planeta_atual = marte
+	mec.tempo = inicio - 5.0
+	_checar(mec.estado_tempestade(marte) == "aviso" and mec.pode_ativar_escudo(), "Marte: aviso antes da tempestade, escudo disponível")
+	jogo.planeta_atual = 0
+	_checar(not mec.pode_ativar_escudo(), "Marte: escudo só funciona estando em Marte")
+	jogo.planeta_atual = marte
+	mec.tempo = inicio + 1.0
+	_checar(_perto(mec.fator_producao(marte, true), 1.0 - float(c["perda"])), "Marte: tempestade corta 60% da produção")
+	_checar(mec.ativar_escudo() and _perto(mec.fator_producao(marte, true), 1.0), "Marte: escudo anula a tempestade")
+	mec.tempo = float(c["ciclo_segundos"]) + 1.0
+	_checar(not mec.escudo_ativo() and mec.estado_tempestade(marte) == "limpo", "Marte: escudo acaba junto com a tempestade")
+	_checar(_perto(mec.fator_producao(marte, false), 1.0 - 0.6 * 90.0 / 420.0), "Marte offline: perda média do ciclo")
+
+	# Lua: fragmentos
+	var lua: int = mec.planeta_com("fragmentos")
+	var surgidos := []
+	mec.fragmento_surgiu.connect(func(id): surgidos.append(id))
+	jogo.planeta_atual = 0
+	mec.tick(60.0)
+	_checar(surgidos.is_empty(), "Lua: fragmentos só aparecem com você na Lua")
+	jogo.planeta_atual = lua
+	mec.tick(30.0)
+	_checar(surgidos.size() == 1, "Lua: fragmento aparece depois de alguns segundos")
+	var antes: float = jogo.barras[lua]
+	var ganho: float = mec.coletar_fragmento(surgidos[0])
+	_checar(ganho >= 10.0 and _perto(jogo.barras[lua], antes + ganho), "Lua: tocar no fragmento dá barras de titânio")
+	_checar(mec.coletar_fragmento(surgidos[0]) == 0.0, "Lua: não dá pra coletar o mesmo fragmento 2 vezes")
+	mec.tick(30.0)
+	mec.tick(7.0)
+	_checar(surgidos.size() == 2 and mec.coletar_fragmento(surgidos[1]) == 0.0, "Lua: fragmento some se ninguém tocar")
+	mec.tick(30.0)
+	jogo.planeta_atual = 0
+	mec.tick(0.1)
+	_checar(surgidos.size() == 3 and mec.coletar_fragmento(surgidos[2]) == 0.0, "Lua: fragmento some quando você sai da Lua")
+	jogo.free()
+	_apagar_save_teste()
+
+
+## Abre a tela principal e o painel da Expedição em cada planeta, pra pegar
+## erro de script na interface (os outros testes só olham a lógica).
+func _testar_telas() -> void:
+	print("Telas:")
+	var jogo: Node = root.get_node("Jogo")
+	jogo.caminho_save = SAVE_TESTE
+	jogo.novo_jogo()
+	var cena_script: PackedScene = load("res://scenes/main.tscn")
+	var cena: Node = cena_script.instantiate()
+	root.add_child(cena)
+	await process_frame
+	_checar(cena.get_script() != null and cena.has_method("_atualizar"), "tela principal carrega sem erro")
+	jogo.desbloqueados = 3
+	var ok := true
+	for p in 3:
+		jogo.planeta_atual = p
+		jogo.mecanicas.tempo = 335.0   # Marte em tempestade
+		cena._atualizar()
+		await process_frame
+		ok = ok and cena._planeta_montado == p
+	_checar(ok, "tela monta Terra, Lua e Marte (com painel Especial)")
+	cena._painel_arvore.abrir()
+	await process_frame
+	_checar(cena._painel_arvore.visible, "painel da Expedição abre")
+	jogo.planeta_atual = 1   # Lua
+	cena._atualizar()
+	await process_frame
+	cena._on_fragmento_surgiu(999)
+	await process_frame
+	_checar(cena._camada_fragmentos.get_child_count() == 1, "fragmento da Lua aparece na tela")
+	jogo.planeta_atual = 2
+	cena._atualizar()
+	await process_frame
+	_checar(cena._camada_fragmentos.get_child_count() == 0, "fragmento some da tela ao sair da Lua")
+	cena.queue_free()
+	await process_frame
+	jogo.novo_jogo()
+	_apagar_save_teste()
