@@ -94,7 +94,7 @@ Volta tudo pra Terra (colônias inclusive) e dá **Poeira Estelar** proporcional
 
 ## Próximo passo
 1. ~~Economia: curvas de custo e produção do MVP~~ ✅ Feito: ver [economia/ECONOMIA.md](economia/ECONOMIA.md)
-2. ~~Programador Core: projeto Godot e protótipo da Terra~~ ✅ Feito: ver [codigo/README.md](codigo/README.md). Terra, Lua e Marte jogáveis, sem arte final, mecânicas especiais, rebirth e árvore.
+2. ~~Programador Core: projeto Godot e protótipo da Terra~~ ✅ Feito: ver [codigo/README.md](codigo/README.md). Terra, Lua e Marte jogáveis, com rebirth, árvore de habilidades e compra automática. Ainda sem arte final e sem as mecânicas especiais dos planetas.
 3. Cibersegurança + Android + Backend: módulo Security Foundation.
 4. Designer Visual: identidade visual e prompts de ícone e telas.
 5. Começar a juntar os 12 testadores pro teste fechado obrigatório da Play Store.

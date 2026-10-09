@@ -14,6 +14,8 @@ var _total := 0
 func _initialize() -> void:
 	# Espera um quadro pros autoloads (Economia, Jogo) estarem prontos.
 	await process_frame
+	# Protege o save de verdade do jogador: o Jogo dos testes só escreve no arquivo de teste.
+	root.get_node("Jogo").caminho_save = SAVE_TESTE
 	_jogo_script = load("res://scripts/autoload/jogo.gd")
 	_testar_formulas()
 	_testar_formatar()
@@ -21,6 +23,8 @@ func _initialize() -> void:
 	_testar_nave()
 	_testar_offline()
 	_testar_save()
+	_testar_arvore()
+	_testar_rebirth()
 	_testar_ritmo_inicial()
 	await _testar_viagem()
 	print("")
@@ -148,15 +152,13 @@ func _testar_save() -> void:
 	DirAccess.remove_absolute(SAVE_TESTE)
 
 
-## Joga sozinho com a mesma estratégia do simulador e confere o ritmo da 1ª sessão.
-func _testar_ritmo_inicial() -> void:
-	print("Ritmo da 1ª sessão (jogador automático):")
-	var eco: Node = root.get_node("Economia")
-	var jogo := _jogo_novo()
+## Joga sozinho (mesma estratégia do simulador) até chegar em Marte ou acabar o tempo.
+## Retorna os segundos até cada planeta: {1: Lua, 2: Marte}.
+func _jogar_ate_marte(jogo: Node, limite := 3600.0) -> Dictionary:
 	var t := 0.0
 	var chegadas := {}
-	while t < 3600.0 and jogo.desbloqueados < 3:
-		_comprar_como_simulador(jogo, eco)
+	while t < limite and jogo.desbloqueados < 3:
+		jogo.comprar_automatico(1000)
 		var p: int = jogo.desbloqueados - 1
 		if jogo.pode_lancar(p):
 			var destino: int = jogo.lancar_nave(p)
@@ -164,51 +166,93 @@ func _testar_ritmo_inicial() -> void:
 			chegadas[destino] = t
 		jogo.produzir(1.0, true, 1.0)
 		t += 1.0
+	return chegadas
+
+
+func _testar_ritmo_inicial() -> void:
+	print("Ritmo da 1ª sessão (jogador automático):")
+	var jogo := _jogo_novo()
+	var chegadas := _jogar_ate_marte(jogo)
 	_checar(chegadas.has(1) and chegadas[1] < 15 * 60, "chega na Lua em menos de 15 min (%s s)" % str(chegadas.get(1)))
 	_checar(chegadas.has(2) and chegadas[2] < 45 * 60, "chega em Marte em menos de 45 min (%s s)" % str(chegadas.get(2)))
+
+	# 2ª expedição com ~10 Poeira gastos como um jogador faria no 1º rebirth.
+	var forte := _jogo_novo()
+	forte.poeira = 10
+	for id in ["brocas_afiadas", "brocas_afiadas", "brocas_afiadas", "refino_rapido", "refino_rapido", "projeto_enxuto"]:
+		forte.comprar_no(id)
+	var chegadas_forte := _jogar_ate_marte(forte)
+	_checar(chegadas_forte.has(2) and chegadas.has(2) and chegadas_forte[2] < chegadas[2] * 0.75,
+		"com a árvore, Marte chega bem mais rápido (%s s contra %s s)" % [str(chegadas_forte.get(2)), str(chegadas.get(2))])
 	jogo.free()
+	forte.free()
+	_apagar_save_teste()
+
+
+func _apagar_save_teste() -> void:
 	if FileAccess.file_exists(SAVE_TESTE):
 		DirAccess.remove_absolute(SAVE_TESTE)
 
 
-## Mesma regra do simulador: compra o mais barato entre a mina de melhor retorno
-## e a refinaria que é gargalo da nave.
-func _comprar_como_simulador(jogo: Node, eco: Node) -> void:
-	for _seguranca in 1000:
-		var melhor := {}
-		for p in jogo.desbloqueados:
-			for i in jogo.minas[p].size():
-				if not jogo.mina_liberada(p, i):
-					continue
-				var nivel: int = jogo.minas[p][i]
-				var custo: float = eco.custo_n(eco.mina(p, i), nivel, 1)
-				var ganho: float = (eco.producao_mina(p, i, nivel + 1) - eco.producao_mina(p, i, nivel)) \
-					* jogo.multiplicador_planeta(p)
-				if melhor.is_empty() or custo / ganho < melhor["retorno"]:
-					melhor = {"retorno": custo / ganho, "custo": custo, "tipo": "mina", "p": p, "i": i}
-		var opcao := melhor
-		var atual: int = jogo.desbloqueados - 1
-		var req: Dictionary = eco.requisitos_nave(atual)
-		var pior := -1.0
-		for planeta in req:
-			var falta: float = req[planeta] - jogo.barras[planeta]
-			if falta <= 0.0:
-				continue
-			var taxa: float = jogo.barras_por_segundo(planeta)
-			var eta: float = INF if taxa == 0.0 else falta / taxa
-			if eta > pior:
-				pior = eta
-				var custo_ref: float = eco.custo_n(eco.refinaria(planeta), jogo.refinarias[planeta], 1)
-				if custo_ref < melhor["custo"]:
-					opcao = {"custo": custo_ref, "tipo": "ref", "p": planeta}
-				else:
-					opcao = melhor
-		if opcao["custo"] > jogo.creditos:
-			return
-		if opcao["tipo"] == "mina":
-			jogo.comprar_mina(opcao["p"], opcao["i"], 1)
-		else:
-			jogo.comprar_refinaria(opcao["p"], 1)
+func _testar_arvore() -> void:
+	print("Árvore de habilidades:")
+	var jogo := _jogo_novo()
+	_checar(not jogo.comprar_no("brocas_afiadas"), "sem Poeira não compra nada")
+	jogo.poeira = 10
+	_checar(not jogo.comprar_no("toque_pesado"), "nó bloqueado sem ponto no anterior do ramo")
+	_checar(jogo.comprar_no("brocas_afiadas") and jogo.poeira == 9, "1º nível de Brocas custa 1")
+	_checar(jogo.comprar_no("brocas_afiadas") and jogo.poeira == 7, "2º nível custa 2 (cada nível +1)")
+	jogo.minas[0][0] = 10
+	_checar(_perto(jogo.producao_mina_no_nivel(0, 0, 10), 20.0 * 1.5), "Brocas nv 2 = +50% de produção")
+	_checar(jogo.comprar_no("toque_pesado"), "com Brocas, o Toque Pesado libera")
+	jogo.poeira = 100
+	jogo.comprar_no("refino_rapido")
+	jogo.comprar_no("gerente_inicial")
+	jogo.comprar_no("compra_automatica")
+	jogo.comprar_no("drones_de_colonia")
+	_checar(_perto(jogo.multiplicador_planeta(1), 1.5), "Drones: planeta sem presença rende +50%")
+	jogo.comprar_no("projeto_enxuto")
+	jogo.comprar_no("capital_inicial")
+	jogo.comprar_no("plataforma_pronta")
+	_checar(_perto(jogo.requisitos_nave(0)[0], 12000.0 * 0.95 * 0.75), "Projeto Enxuto + Plataforma Pronta barateiam a nave da Terra")
+	var antes: int = jogo.poeira
+	for k in 20:
+		jogo.comprar_no("brocas_afiadas")
+	_checar(jogo.nivel_no("brocas_afiadas") == 10 and jogo.poeira < antes, "não passa do nível máximo (10)")
+	jogo.free()
+	_apagar_save_teste()
+
+
+func _testar_rebirth() -> void:
+	print("Rebirth (Nova Expedição):")
+	var jogo := _jogo_novo()
+	jogo.creditos_expedicao = 1e14   # (1e14 / 1e11) ^ (1/3) = 10 Poeira
+	_checar(not jogo.pode_fazer_rebirth(), "não libera antes de construir a nave de Marte")
+	jogo.desbloqueados = 3
+	jogo.planeta_atual = 2
+	jogo.naves_prontas[2] = true
+	_checar(jogo.poeira_disponivel() == 10, "1e14 créditos na expedição = 10 Poeira")
+	_checar(jogo.rebirth_recomendado(), "10 Poeira na 1ª vez = recomendado")
+	jogo.poeira = 4   # Brocas (1) + Refino (1) + Gerente Inicial (2)
+	jogo.comprar_no("brocas_afiadas")
+	jogo.comprar_no("refino_rapido")
+	jogo.comprar_no("gerente_inicial")
+	var poeira_antes: int = jogo.poeira
+	_checar(jogo.fazer_rebirth() == 10, "rebirth rende os 10 Poeira")
+	_checar(jogo.poeira == poeira_antes + 10 and jogo.poeira_total == 10 and jogo.expedicoes == 1, "Poeira e contagem de expedições ficam")
+	_checar(jogo.desbloqueados == 1 and jogo.planeta_atual == 0 and jogo.creditos_expedicao == 0.0, "volta pra Terra e zera a expedição")
+	_checar(jogo.nivel_no("brocas_afiadas") == 1, "a árvore fica")
+	_checar(jogo.minas[0][0] == 10, "Gerente Inicial: começa com a Superfície no nv 10")
+	_checar(not jogo.pode_fazer_rebirth(), "precisa construir a nave de Marte de novo")
+
+	jogo.salvar()
+	var outro := _jogo_novo()
+	outro.carregar()
+	_checar(outro.poeira == jogo.poeira and outro.nivel_no("gerente_inicial") == 1 and outro.expedicoes == 1,
+		"save guarda Poeira, árvore e expedições")
+	jogo.free()
+	outro.free()
+	_apagar_save_teste()
 
 
 ## Usa o Jogo de verdade (autoload) pra testar a viagem com a animação de ~1 s.

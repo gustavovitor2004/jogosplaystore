@@ -65,6 +65,9 @@ Cada ramo tem 4 nós. Pra liberar um nó, precisa ter pelo menos 1 ponto no nó 
 
 **Custo:** os nós de vários níveis custam 1, 2, 3... Poeira (cada nível custa 1 a mais). Os nós de nível único têm preço fixo.
 Com cerca de 10 Poeira (o primeiro rebirth), o jogador fica em média **2× mais forte**.
+No jogo de verdade (teste automático do Godot): gastando 10 Poeira em Brocas Afiadas, Refino Rápido e Projeto Enxuto, a chegada em Marte cai de **31 min pra 19 min**.
+
+> O simulador em Python usa uma aproximação da árvore (+10% por Poeira). As regras exatas de cada nó estão no jogo (`codigo/scripts/autoload/jogo.gd`) e são conferidas pelos testes.
 
 ## 6. Ritmo do jogo
 

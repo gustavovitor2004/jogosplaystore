@@ -6,11 +6,8 @@
 extends Control
 
 const ViagemPadrao := preload("res://scripts/viagens/viagem_padrao.gd")
+const PainelArvore := preload("res://scripts/ui/painel_arvore.gd")
 
-const COR_FUNDO := Color("0b1020")
-const COR_PAINEL := Color("161d33")
-const COR_DESTAQUE := Color("f5a623")
-const COR_TEXTO_FRACO := Color("8a93b2")
 const INTERVALO_UI := 0.1
 const MODOS_COMPRA := [1, 10, -1]   # -1 = máximo que der
 const SEGUNDOS_AVISO := 4.0
@@ -23,6 +20,8 @@ var _desbloqueados_montados := -1
 var _lbl_creditos: Label
 var _lbl_renda: Label
 var _btn_modo: Button
+var _btn_expedicao: Button
+var _btn_auto: Button
 var _barra_planetas: HBoxContainer
 var _lbl_planeta: Label
 var _lbl_presenca: Label
@@ -32,14 +31,16 @@ var _linhas_minas: Array = []
 var _linha_ref: Dictionary = {}
 var _nave: Dictionary = {}
 var _aviso: Label
+var _painel_arvore: Control
 var _viagem: Control
 
 
 func _ready() -> void:
-	_montar_tema()
+	theme = Estilo.tema()
 	_montar_layout()
 	Jogo.estado_mudou.connect(_atualizar)
 	Jogo.viagem_comecou.connect(_on_viagem_comecou)
+	Jogo.rebirth_feito.connect(_on_rebirth_feito)
 	_atualizar()
 	if Jogo.ganho_offline > 0.0:
 		_mostrar_aviso("Enquanto você estava fora, suas minas renderam %s créditos!" % Formatar.numero(Jogo.ganho_offline))
@@ -55,30 +56,9 @@ func _process(delta: float) -> void:
 
 # ---------- montagem ----------
 
-func _montar_tema() -> void:
-	var tema := Theme.new()
-	tema.default_font_size = 26
-	tema.set_stylebox("normal", "Button", _caixa(Color("2a3558")))
-	tema.set_stylebox("hover", "Button", _caixa(Color("34416b")))
-	tema.set_stylebox("pressed", "Button", _caixa(Color("1f2843")))
-	tema.set_stylebox("disabled", "Button", _caixa(Color("1a2036")))
-	tema.set_stylebox("focus", "Button", StyleBoxEmpty.new())
-	tema.set_color("font_disabled_color", "Button", Color("5a6380"))
-	tema.set_stylebox("panel", "PanelContainer", _caixa(COR_PAINEL))
-	theme = tema
-
-
-func _caixa(cor: Color) -> StyleBoxFlat:
-	var caixa := StyleBoxFlat.new()
-	caixa.bg_color = cor
-	caixa.set_corner_radius_all(14)
-	caixa.set_content_margin_all(14)
-	return caixa
-
-
 func _montar_layout() -> void:
 	var fundo := ColorRect.new()
-	fundo.color = COR_FUNDO
+	fundo.color = Estilo.COR_FUNDO
 	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(fundo)
 
@@ -91,7 +71,7 @@ func _montar_layout() -> void:
 	add_child(margem)
 
 	var coluna := VBoxContainer.new()
-	coluna.add_theme_constant_override("separation", 14)
+	coluna.add_theme_constant_override("separation", 12)
 	margem.add_child(coluna)
 
 	# Topo: créditos, renda e modo de compra (x1 / x10 / MÁX)
@@ -100,29 +80,42 @@ func _montar_layout() -> void:
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	topo.add_child(info)
-	_lbl_creditos = _label(40, COR_DESTAQUE)
+	_lbl_creditos = Estilo.label(40, Estilo.COR_DESTAQUE)
 	info.add_child(_lbl_creditos)
-	_lbl_renda = _label(22, COR_TEXTO_FRACO)
+	_lbl_renda = Estilo.label(22, Estilo.COR_TEXTO_FRACO)
 	info.add_child(_lbl_renda)
-	_btn_modo = Button.new()
-	_btn_modo.custom_minimum_size = Vector2(130, 70)
+	_btn_modo = Estilo.botao("", 70)
+	_btn_modo.custom_minimum_size.x = 130
 	_btn_modo.pressed.connect(_on_trocar_modo)
 	topo.add_child(_btn_modo)
+
+	# Expedição (rebirth + árvore) e compra automática
+	var acoes := HBoxContainer.new()
+	acoes.add_theme_constant_override("separation", 10)
+	coluna.add_child(acoes)
+	_btn_expedicao = Estilo.botao("", 64)
+	_btn_expedicao.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_btn_expedicao.add_theme_color_override("font_color", Estilo.COR_POEIRA)
+	_btn_expedicao.pressed.connect(_on_abrir_expedicao)
+	acoes.add_child(_btn_expedicao)
+	_btn_auto = Estilo.botao("", 64)
+	_btn_auto.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_btn_auto.pressed.connect(_on_trocar_auto)
+	acoes.add_child(_btn_auto)
 
 	# Planetas (viagem livre entre os liberados)
 	_barra_planetas = HBoxContainer.new()
 	_barra_planetas.add_theme_constant_override("separation", 10)
 	coluna.add_child(_barra_planetas)
 
-	_lbl_planeta = _label(34)
+	_lbl_planeta = Estilo.label(34)
 	coluna.add_child(_lbl_planeta)
-	_lbl_presenca = _label(20, COR_TEXTO_FRACO)
+	_lbl_presenca = Estilo.label(20, Estilo.COR_TEXTO_FRACO)
 	coluna.add_child(_lbl_presenca)
 
-	_btn_minerar = Button.new()
-	_btn_minerar.custom_minimum_size = Vector2(0, 120)
+	_btn_minerar = Estilo.botao("", 120)
 	_btn_minerar.add_theme_font_size_override("font_size", 36)
-	_btn_minerar.pressed.connect(_on_minerar)
+	_btn_minerar.pressed.connect(Jogo.minerar_toque)
 	coluna.add_child(_btn_minerar)
 
 	var rolagem := ScrollContainer.new()
@@ -134,18 +127,19 @@ func _montar_layout() -> void:
 	_lista.add_theme_constant_override("separation", 10)
 	rolagem.add_child(_lista)
 
-	_aviso = _label(22, COR_DESTAQUE)
-	_aviso.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	_aviso.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_aviso = Estilo.paragrafo(22, Estilo.COR_DESTAQUE)
 	_aviso.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	coluna.add_child(_aviso)
 
 	if OS.is_debug_build():
-		var resetar := Button.new()
-		resetar.text = "Recomeçar (só no teste)"
+		var resetar := Estilo.botao("Recomeçar do zero (só no teste)", 50)
 		resetar.add_theme_font_size_override("font_size", 18)
 		resetar.pressed.connect(Jogo.resetar)
 		coluna.add_child(resetar)
+
+	_painel_arvore = PainelArvore.new()
+	_painel_arvore.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_painel_arvore)
 
 	_viagem = ViagemPadrao.new()
 	_viagem.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -157,15 +151,14 @@ func _reconstruir() -> void:
 	for filho in _barra_planetas.get_children():
 		filho.queue_free()
 	for p in Economia.planetas.size():
-		var botao := Button.new()
+		var botao := Estilo.botao("", 64)
 		botao.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		botao.custom_minimum_size = Vector2(0, 64)
 		if p < Jogo.desbloqueados:
 			botao.text = Economia.planetas[p]["nome"]
 			botao.disabled = p == Jogo.planeta_atual
 			if p == Jogo.planeta_atual:   # destaca onde o jogador está
-				botao.add_theme_stylebox_override("disabled", _caixa(Color("3d4f8a")))
-				botao.add_theme_color_override("font_disabled_color", COR_DESTAQUE)
+				botao.add_theme_stylebox_override("disabled", Estilo.caixa(Estilo.COR_SELECIONADO))
+				botao.add_theme_color_override("font_disabled_color", Estilo.COR_DESTAQUE)
 			botao.pressed.connect(Jogo.viajar.bind(p))
 		else:
 			botao.text = "???"
@@ -198,12 +191,12 @@ func _criar_linha(ao_comprar: Callable) -> Dictionary:
 	var textos := VBoxContainer.new()
 	textos.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	linha.add_child(textos)
-	var nome := _label(26)
-	var info := _label(20, COR_TEXTO_FRACO)
+	var nome := Estilo.label(26)
+	var info := Estilo.label(20, Estilo.COR_TEXTO_FRACO)
 	textos.add_child(nome)
 	textos.add_child(info)
-	var botao := Button.new()
-	botao.custom_minimum_size = Vector2(230, 80)
+	var botao := Estilo.botao("", 80)
+	botao.custom_minimum_size.x = 230
 	botao.pressed.connect(ao_comprar)
 	linha.add_child(botao)
 	return {"nome": nome, "info": info, "botao": botao}
@@ -216,30 +209,19 @@ func _criar_painel_nave() -> void:
 	coluna.add_theme_constant_override("separation", 8)
 	painel.add_child(coluna)
 	_nave = {
-		"titulo": _label(26),
-		"pecas": _label(22, COR_DESTAQUE),
-		"materiais": _label(20, COR_TEXTO_FRACO),
-		"botao": Button.new(),
+		"titulo": Estilo.label(26),
+		"pecas": Estilo.label(22, Estilo.COR_DESTAQUE),
+		"materiais": Estilo.label(20, Estilo.COR_TEXTO_FRACO),
+		"botao": Estilo.botao(""),
 	}
-	_nave["botao"].custom_minimum_size = Vector2(0, 80)
 	_nave["botao"].pressed.connect(_on_lancar)
 	for chave in ["titulo", "pecas", "materiais", "botao"]:
 		coluna.add_child(_nave[chave])
 
 
 func _titulo_secao(texto: String) -> Label:
-	var rotulo := _label(22, COR_TEXTO_FRACO)
+	var rotulo := Estilo.label(22, Estilo.COR_TEXTO_FRACO)
 	rotulo.text = texto.to_upper()
-	return rotulo
-
-
-func _label(tamanho: int, cor := Color.WHITE) -> Label:
-	var rotulo := Label.new()
-	# Texto longo vira "..." em vez de empurrar a tela pra fora em celular estreito.
-	rotulo.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	rotulo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rotulo.add_theme_font_size_override("font_size", tamanho)
-	rotulo.add_theme_color_override("font_color", cor)
 	return rotulo
 
 
@@ -257,6 +239,10 @@ func _atualizar() -> void:
 	_lbl_presenca.text = "Você está aqui: produção x%s" % Formatar.numero(Jogo.multiplicador_planeta(p))
 	_btn_minerar.text = "MINERAR  +%s" % Formatar.numero(Jogo.valor_toque())
 
+	_btn_expedicao.text = "Expedição  ·  %d Poeira%s" % [Jogo.poeira, "  (!)" if Jogo.rebirth_recomendado() else ""]
+	_btn_auto.visible = Jogo.efeito("auto_compra") > 0.0
+	_btn_auto.text = "AUTO: ligado" if Jogo.auto_compra_ligada else "AUTO: desligado"
+
 	for i in _linhas_minas.size():
 		var linha: Dictionary = _linhas_minas[i]
 		var nivel: int = Jogo.minas[p][i]
@@ -271,14 +257,14 @@ func _atualizar() -> void:
 			Formatar.numero(Jogo.producao_mina(p, i)),
 			("   ·   x2 no nv %d" % marco) if marco > 0 else "",
 		]
-		_preencher_botao(linha["botao"], Jogo.orcamento(Economia.mina(p, i), nivel, modo), nivel == 0)
+		_preencher_botao(linha["botao"], Jogo.orcamento_mina(p, i, modo), nivel == 0)
 
 	var nivel_ref: int = Jogo.refinarias[p]
 	_linha_ref["nome"].text = "%s  ·  nv %d" % [Economia.planetas[p]["barra"], nivel_ref]
 	_linha_ref["info"].text = "%s/s   ·   estoque %s" % [
 		Formatar.numero(Jogo.barras_por_segundo(p)), Formatar.numero(Jogo.barras[p]),
 	]
-	_preencher_botao(_linha_ref["botao"], Jogo.orcamento(Economia.refinaria(p), nivel_ref, modo), nivel_ref == 0)
+	_preencher_botao(_linha_ref["botao"], Jogo.orcamento_refinaria(p, modo), nivel_ref == 0)
 
 	_atualizar_nave(p)
 
@@ -296,7 +282,10 @@ func _atualizar_nave(p: int) -> void:
 
 	if Jogo.naves_prontas[p]:
 		_nave["titulo"].text = "Nave construída!"
-		_nave["pecas"].text = ("Rota liberada para %s" % nome_destino) if destino >= 0 else "Próximo planeta em breve!"
+		if destino >= 0:
+			_nave["pecas"].text = "Rota liberada para %s" % nome_destino
+		else:
+			_nave["pecas"].text = "Próximo planeta em breve! Abra a Expedição pro rebirth."
 		_nave["materiais"].text = ""
 		botao.visible = false
 		return
@@ -309,7 +298,7 @@ func _atualizar_nave(p: int) -> void:
 		prontas, partes.size(), ("   ·   próxima: %s" % partes[prontas]) if prontas < partes.size() else "",
 	]
 	var linhas := []
-	var req := Economia.requisitos_nave(p)
+	var req := Jogo.requisitos_nave(p)
 	for planeta in req:
 		linhas.append("%s: %s / %s" % [
 			Economia.planetas[planeta]["barra"], Formatar.numero(Jogo.barras[planeta]), Formatar.numero(req[planeta]),
@@ -317,8 +306,10 @@ func _atualizar_nave(p: int) -> void:
 	_nave["materiais"].text = "\n".join(linhas)
 	botao.visible = true
 	botao.disabled = not Jogo.pode_lancar(p)
-	botao.text = ("LANÇAR PARA %s!" % nome_destino.to_upper()) if Jogo.pode_lancar(p) \
-		else "Juntando barras...  %d%%" % int(progresso * 100.0)
+	if Jogo.pode_lancar(p):
+		botao.text = ("LANÇAR PARA %s!" % nome_destino.to_upper()) if destino >= 0 else "CONCLUIR NAVE!"
+	else:
+		botao.text = "Juntando barras...  %d%%" % int(progresso * 100.0)
 
 
 func _mostrar_aviso(texto: String) -> void:
@@ -335,8 +326,13 @@ func _on_trocar_modo() -> void:
 	_atualizar()
 
 
-func _on_minerar() -> void:
-	Jogo.minerar_toque()
+func _on_trocar_auto() -> void:
+	Jogo.auto_compra_ligada = not Jogo.auto_compra_ligada
+	_atualizar()
+
+
+func _on_abrir_expedicao() -> void:
+	_painel_arvore.abrir()
 
 
 func _on_comprar_mina(p: int, i: int) -> void:
@@ -351,8 +347,12 @@ func _on_lancar() -> void:
 	var p := Jogo.planeta_atual
 	var destino := Jogo.lancar_nave(p)
 	if destino < 0 and Jogo.naves_prontas[p]:
-		_mostrar_aviso("Nave pronta! O próximo planeta chega numa atualização.")
+		_mostrar_aviso("Nave concluída! Rebirth liberado: abra a Expedição.")
 
 
 func _on_viagem_comecou(_de: int, para: int) -> void:
 	_viagem.tocar(Economia.planetas[para]["nome"], Jogo.DURACAO_VIAGEM)
+
+
+func _on_rebirth_feito(poeira_ganha: int) -> void:
+	_mostrar_aviso("+%d Poeira Estelar! Nova expedição começando na Terra." % poeira_ganha)

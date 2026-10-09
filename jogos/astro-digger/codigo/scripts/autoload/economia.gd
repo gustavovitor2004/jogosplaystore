@@ -29,12 +29,13 @@ func carregar() -> void:
 
 # ---------- marcos de nível (x2 nos níveis 10, 25, 50...) ----------
 
-func multiplicador_marcos(nivel: int) -> float:
+## `bonus_marco` vem da árvore (Marcos Turbinados: x2 vira x2,5).
+func multiplicador_marcos(nivel: int, bonus_marco := 0.0) -> float:
 	var n := 0
 	for marco in global["marcos_de_nivel"]:
 		if nivel >= int(marco):
 			n += 1
-	return pow(float(global["multiplicador_por_marco"]), n)
+	return pow(float(global["multiplicador_por_marco"]) + bonus_marco, n)
 
 
 ## Próximo nível que dobra a produção, ou -1 se já passou de todos.
@@ -55,16 +56,16 @@ func refinaria(p: int) -> Dictionary:
 	return planetas[p]["refinaria"]
 
 
-func producao_mina(p: int, i: int, nivel: int) -> float:
+func producao_mina(p: int, i: int, nivel: int, bonus_marco := 0.0) -> float:
 	if nivel <= 0:
 		return 0.0
-	return float(mina(p, i)["producao_base"]) * nivel * multiplicador_marcos(nivel)
+	return float(mina(p, i)["producao_base"]) * nivel * multiplicador_marcos(nivel, bonus_marco)
 
 
-func barras_refinaria(p: int, nivel: int) -> float:
+func barras_refinaria(p: int, nivel: int, bonus_marco := 0.0) -> float:
 	if nivel <= 0:
 		return 0.0
-	return float(refinaria(p)["barras_por_segundo_base"]) * nivel * multiplicador_marcos(nivel)
+	return float(refinaria(p)["barras_por_segundo_base"]) * nivel * multiplicador_marcos(nivel, bonus_marco)
 
 
 # ---------- custos (servem pra mina e refinaria) ----------
@@ -111,3 +112,47 @@ func indice_planeta(id: String) -> int:
 		if planetas[i]["id"] == id:
 			return i
 	return -1
+
+
+# ---------- rebirth e árvore de habilidades ----------
+
+## Poeira Estelar que uma expedição rende (antes do bônus da árvore).
+func poeira_base(creditos_da_expedicao: float) -> int:
+	var rb: Dictionary = dados["rebirth"]
+	if creditos_da_expedicao <= 0.0:
+		return 0
+	# O 1e-9 evita que 1000^(1/3) = 9,9999... vire 9 por arredondamento.
+	return int(floor(pow(creditos_da_expedicao / float(rb["divisor"]), float(rb["expoente"])) + 1e-9))
+
+
+## Planeta cuja nave precisa estar pronta pra liberar o rebirth.
+func planeta_requisito_rebirth() -> int:
+	return indice_planeta(dados["rebirth"]["requisito_nave_planeta"])
+
+
+func ramos() -> Array:
+	return dados["arvore"]["ramos"]
+
+
+## Procura um nó da árvore pelo id. Retorna {} se não existir.
+func no_arvore(id: String) -> Dictionary:
+	for ramo in ramos():
+		for no in ramo["nos"]:
+			if no["id"] == id:
+				return no
+	return {}
+
+
+## Nó anterior no mesmo ramo (precisa de 1 ponto nele pra liberar este), ou "" se é o primeiro.
+func no_anterior(id: String) -> String:
+	for ramo in ramos():
+		var nos: Array = ramo["nos"]
+		for k in nos.size():
+			if nos[k]["id"] == id:
+				return "" if k == 0 else String(nos[k - 1]["id"])
+	return ""
+
+
+## Custo em Poeira do próximo nível de um nó.
+func custo_no(no: Dictionary, nivel_atual: int) -> int:
+	return int(no["custo_base"]) + int(no["custo_extra_por_nivel"]) * nivel_atual

@@ -18,11 +18,13 @@ O botão **"Recomeçar (só no teste)"** aparece só nas versões de teste e apa
 - **Bônus de presença** (x2 no planeta onde você está), com todos os planetas produzindo
 - **Ganho offline** (50%, até 4 h) e aviso "enquanto você estava fora..."
 - **Save automático** a cada 10 s e quando o app vai pro segundo plano
+- **Rebirth ("Nova Expedição")**: libera quando a nave de Marte fica pronta. Rende Poeira Estelar e pede confirmação em 2 toques pra ninguém resetar sem querer. O botão mostra **(!)** quando vale a pena
+- **Árvore de habilidades**: 16 nós em 4 ramos, todos funcionando (produção, barras, naves mais baratas, offline, presença x3...)
+- **Compra automática (AUTO)**: liberada pela árvore, usa a mesma estratégia do simulador
 
 ## O que ainda NÃO tem (próximas etapas)
 - Arte final (por enquanto são caixas e um foguete simples)
 - Mecânicas especiais dos planetas (quique da Lua, tempestade de Marte)
-- Rebirth e árvore de habilidades (os números já estão no `economia.json`)
 - Missões, sequência de login, anúncios, compras
 - **Security Foundation**: save criptografado, horário do servidor, Play Integrity. Os pontos do código que vão mudar estão marcados com `SECURITY FOUNDATION`
 
@@ -32,13 +34,15 @@ data/economia.json             TODOS os números do jogo (o simulador também l�
 scripts/autoload/economia.gd   fórmulas: custo, produção, marcos, nave
 scripts/autoload/jogo.gd       estado do jogador e ações (comprar, lançar, viajar, salvar)
 scripts/ui/main.gd             tela principal (montada por código)
+scripts/ui/painel_arvore.gd    painel Expedição: rebirth + árvore
+scripts/ui/estilo.gd           cores e peças visuais comuns a todas as telas
 scripts/viagens/               animações de viagem (cada skin futura é um arquivo aqui)
 scripts/util/formatar.gd       números curtos: 1234567 -> 1,23M
 tests/test_economia.gd         testes automáticos
 ```
 
 ## Testes automáticos
-Conferem fórmulas, compras, nave, viagem, offline, save (inclusive save corrompido) e se o ritmo da 1ª sessão continua batendo com o simulador.
+Conferem fórmulas, compras, nave, viagem, offline, save (inclusive save corrompido), árvore, rebirth e se o ritmo da 1ª sessão continua batendo com o simulador. Também conferem que a 2ª expedição, com a árvore, fica bem mais rápida. Os testes nunca mexem no seu save de verdade.
 
 ```
 godot --headless --path . -s res://tests/test_economia.gd

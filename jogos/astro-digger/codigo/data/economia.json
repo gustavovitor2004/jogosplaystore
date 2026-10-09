@@ -67,9 +67,10 @@
     "nome": "Nova Expedição",
     "moeda": "Poeira Estelar",
     "requisito": "construir a nave de Marte",
+    "requisito_nave_planeta": "marte",
     "formula": "poeira = floor( (creditos_ganhos_na_expedicao / divisor) ^ expoente )",
     "divisor": 1.0e11,
-    "expoente": 0.3333
+    "expoente": 0.333333333333
   },
 
   "arvore": {
@@ -78,37 +79,37 @@
       {
         "id": "mineracao", "nome": "Mineração",
         "nos": [
-          { "id": "brocas_afiadas", "nome": "Brocas Afiadas", "efeito": "producao_global", "valor_por_nivel": 0.25, "nivel_max": 10, "custo_base": 1, "custo_extra_por_nivel": 1 },
-          { "id": "toque_pesado", "nome": "Toque Pesado", "efeito": "toque_mult", "valor_por_nivel": 2.0, "nivel_max": 1, "custo_base": 2, "custo_extra_por_nivel": 0 },
-          { "id": "veio_rico", "nome": "Veio Rico", "efeito": "primeira_mina_mult", "valor_por_nivel": 2.0, "nivel_max": 1, "custo_base": 4, "custo_extra_por_nivel": 0 },
-          { "id": "marcos_turbinados", "nome": "Marcos Turbinados", "efeito": "multiplicador_por_marco", "valor_por_nivel": 0.5, "nivel_max": 1, "custo_base": 20, "custo_extra_por_nivel": 0 }
+          { "id": "brocas_afiadas", "descricao": "+25% de produção em todas as minas, por nível", "nome": "Brocas Afiadas", "efeito": "producao_global", "valor_por_nivel": 0.25, "nivel_max": 10, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "toque_pesado", "descricao": "O toque em MINERAR vale o dobro", "nome": "Toque Pesado", "efeito": "toque_mult", "valor_por_nivel": 2.0, "nivel_max": 1, "custo_base": 2, "custo_extra_por_nivel": 0 },
+          { "id": "veio_rico", "descricao": "A 1ª mina de cada planeta produz o dobro", "nome": "Veio Rico", "efeito": "primeira_mina_mult", "valor_por_nivel": 2.0, "nivel_max": 1, "custo_base": 4, "custo_extra_por_nivel": 0 },
+          { "id": "marcos_turbinados", "descricao": "Marcos de nível dão x2,5 em vez de x2", "nome": "Marcos Turbinados", "efeito": "multiplicador_por_marco", "valor_por_nivel": 0.5, "nivel_max": 1, "custo_base": 20, "custo_extra_por_nivel": 0 }
         ]
       },
       {
         "id": "automacao", "nome": "Automação",
         "nos": [
-          { "id": "refino_rapido", "nome": "Refino Rápido", "efeito": "barras_global", "valor_por_nivel": 0.2, "nivel_max": 10, "custo_base": 1, "custo_extra_por_nivel": 1 },
-          { "id": "gerente_inicial", "nome": "Gerente Inicial", "efeito": "inicia_mina_terra_nivel", "valor_por_nivel": 10, "nivel_max": 1, "custo_base": 2, "custo_extra_por_nivel": 0 },
-          { "id": "compra_automatica", "nome": "Compra Automática", "efeito": "auto_compra", "valor_por_nivel": 1, "nivel_max": 1, "custo_base": 5, "custo_extra_por_nivel": 0 },
-          { "id": "drones_de_colonia", "nome": "Drones de Colônia", "efeito": "producao_fora_de_presenca", "valor_por_nivel": 0.5, "nivel_max": 1, "custo_base": 12, "custo_extra_por_nivel": 0 }
+          { "id": "refino_rapido", "descricao": "+20% de barras em todas as refinarias, por nível", "nome": "Refino Rápido", "efeito": "barras_global", "valor_por_nivel": 0.2, "nivel_max": 10, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "gerente_inicial", "descricao": "Cada expedição começa com a Superfície da Terra no nível 10", "nome": "Gerente Inicial", "efeito": "inicia_mina_terra_nivel", "valor_por_nivel": 10, "nivel_max": 1, "custo_base": 2, "custo_extra_por_nivel": 0 },
+          { "id": "compra_automatica", "descricao": "Libera o botão AUTO: compra melhorias sozinho", "nome": "Compra Automática", "efeito": "auto_compra", "valor_por_nivel": 1, "nivel_max": 1, "custo_base": 5, "custo_extra_por_nivel": 0 },
+          { "id": "drones_de_colonia", "descricao": "Planetas onde você não está rendem +50%", "nome": "Drones de Colônia", "efeito": "producao_fora_de_presenca", "valor_por_nivel": 0.5, "nivel_max": 1, "custo_base": 12, "custo_extra_por_nivel": 0 }
         ]
       },
       {
         "id": "engenharia", "nome": "Engenharia",
         "nos": [
-          { "id": "projeto_enxuto", "nome": "Projeto Enxuto", "efeito": "custo_nave", "valor_por_nivel": -0.05, "nivel_max": 6, "custo_base": 1, "custo_extra_por_nivel": 1 },
-          { "id": "capital_inicial", "nome": "Capital Inicial", "efeito": "creditos_iniciais", "valor_por_nivel": 1000, "nivel_max": 1, "custo_base": 1, "custo_extra_por_nivel": 0 },
-          { "id": "plataforma_pronta", "nome": "Plataforma Pronta", "efeito": "casco_terra_pronto", "valor_por_nivel": 1, "nivel_max": 1, "custo_base": 3, "custo_extra_por_nivel": 0 },
-          { "id": "refinaria_orbital", "nome": "Refinaria Orbital", "efeito": "refinaria_custo", "valor_por_nivel": -0.25, "nivel_max": 1, "custo_base": 10, "custo_extra_por_nivel": 0 }
+          { "id": "projeto_enxuto", "descricao": "Naves pedem 5% menos barras, por nível", "nome": "Projeto Enxuto", "efeito": "custo_nave", "valor_por_nivel": -0.05, "nivel_max": 6, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "capital_inicial", "descricao": "Cada expedição começa com +1.000 créditos", "nome": "Capital Inicial", "efeito": "creditos_iniciais", "valor_por_nivel": 1000, "nivel_max": 1, "custo_base": 1, "custo_extra_por_nivel": 0 },
+          { "id": "plataforma_pronta", "descricao": "O casco da nave da Terra já vem pronto (-25% de barras)", "nome": "Plataforma Pronta", "efeito": "casco_terra_pronto", "valor_por_nivel": 1, "nivel_max": 1, "custo_base": 3, "custo_extra_por_nivel": 0 },
+          { "id": "refinaria_orbital", "descricao": "Refinarias custam 25% menos", "nome": "Refinaria Orbital", "efeito": "refinaria_custo", "valor_por_nivel": -0.25, "nivel_max": 1, "custo_base": 10, "custo_extra_por_nivel": 0 }
         ]
       },
       {
         "id": "exploracao", "nome": "Exploração",
         "nos": [
-          { "id": "cofre_offline", "nome": "Cofre Offline", "efeito": "offline_limite_horas", "valor_por_nivel": 1, "nivel_max": 8, "custo_base": 1, "custo_extra_por_nivel": 1 },
-          { "id": "eficiencia_offline", "nome": "Turno da Noite", "efeito": "offline_eficiencia", "valor_por_nivel": 0.1, "nivel_max": 5, "custo_base": 2, "custo_extra_por_nivel": 1 },
-          { "id": "faro_de_explorador", "nome": "Faro de Explorador", "efeito": "poeira_mult", "valor_por_nivel": 0.1, "nivel_max": 5, "custo_base": 3, "custo_extra_por_nivel": 2 },
-          { "id": "presenca_forte", "nome": "Presença Forte", "efeito": "bonus_presenca", "valor_por_nivel": 1.0, "nivel_max": 1, "custo_base": 15, "custo_extra_por_nivel": 0 }
+          { "id": "cofre_offline", "descricao": "+1 hora no limite de ganho offline, por nível", "nome": "Cofre Offline", "efeito": "offline_limite_horas", "valor_por_nivel": 1, "nivel_max": 8, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "eficiencia_offline", "descricao": "+10% de eficiência offline, por nível", "nome": "Turno da Noite", "efeito": "offline_eficiencia", "valor_por_nivel": 0.1, "nivel_max": 5, "custo_base": 2, "custo_extra_por_nivel": 1 },
+          { "id": "faro_de_explorador", "descricao": "+10% de Poeira Estelar no rebirth, por nível", "nome": "Faro de Explorador", "efeito": "poeira_mult", "valor_por_nivel": 0.1, "nivel_max": 5, "custo_base": 3, "custo_extra_por_nivel": 2 },
+          { "id": "presenca_forte", "descricao": "Bônus de presença sobe de x2 para x3", "nome": "Presença Forte", "efeito": "bonus_presenca", "valor_por_nivel": 1.0, "nivel_max": 1, "custo_base": 15, "custo_extra_por_nivel": 0 }
         ]
       }
     ]

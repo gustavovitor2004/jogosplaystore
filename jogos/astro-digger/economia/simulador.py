@@ -164,7 +164,7 @@ class Jogo:
 
     def poeira(self):
         rb = CONFIG["rebirth"]
-        return math.floor((self.creditos_run / rb["divisor"]) ** rb["expoente"])
+        return math.floor((self.creditos_run / rb["divisor"]) ** rb["expoente"] + 1e-9)   # igual ao jogo
 
 
 def fmt(seg):
