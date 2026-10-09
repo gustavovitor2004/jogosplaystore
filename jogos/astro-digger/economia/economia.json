@@ -34,15 +34,15 @@
       "nome": "Lua",
       "barra": "Barra de Titânio",
       "minas": [
-        { "id": "cratera", "nome": "Cratera", "producao_base": 1500, "custo_base": 2.0e5, "crescimento": 1.15 },
-        { "id": "mar_lunar", "nome": "Mar Lunar", "producao_base": 25000, "custo_base": 1.5e7, "crescimento": 1.16 },
-        { "id": "manto", "nome": "Manto Lunar", "producao_base": 400000, "custo_base": 1.2e9, "crescimento": 1.17 }
+        { "id": "cratera", "nome": "Cratera", "producao_base": 1500, "custo_base": 2.0e4, "crescimento": 1.15 },
+        { "id": "mar_lunar", "nome": "Mar Lunar", "producao_base": 25000, "custo_base": 1.5e6, "crescimento": 1.16 },
+        { "id": "manto", "nome": "Manto Lunar", "producao_base": 400000, "custo_base": 1.2e8, "crescimento": 1.17 }
       ],
-      "refinaria": { "barras_por_segundo_base": 0.1, "custo_base": 5.0e5, "crescimento": 1.2 },
+      "refinaria": { "barras_por_segundo_base": 0.1, "custo_base": 5.0e4, "crescimento": 1.2 },
       "nave": {
         "destino": "marte",
         "partes": ["Casco", "Motor", "Tanque", "Navegação"],
-        "custo_total_barras": { "lua": 600000, "terra": 900000 }
+        "custo_total_barras": { "lua": 40000, "terra": 60000 }
       }
     },
     {
@@ -58,7 +58,7 @@
       "nave": {
         "destino": "em_breve",
         "partes": ["Casco", "Motor", "Tanque", "Navegação"],
-        "custo_total_barras": { "marte": 2.0e7, "lua": 3.0e7 }
+        "custo_total_barras": { "marte": 5.0e5, "lua": 8.0e5 }
       }
     }
   ],
@@ -66,7 +66,7 @@
   "rebirth": {
     "nome": "Nova Expedição",
     "moeda": "Poeira Estelar",
-    "requisito": "chegar em Marte",
+    "requisito": "construir a nave de Marte",
     "formula": "poeira = floor( (creditos_ganhos_na_expedicao / divisor) ^ expoente )",
     "divisor": 1.0e11,
     "expoente": 0.3333
@@ -119,6 +119,29 @@
     "producao_dobrada": { "multiplicador": 2.0, "minutos_por_anuncio": 30, "minutos_maximos_acumulados": 240 },
     "dobrar_ganho_offline": { "multiplicador": 2.0 },
     "limite_por_dia": 10
+  },
+
+  "ritmo_alvo": {
+    "_regra": "Tempo de um jogador típico entre um planeta e o próximo, na 1ª expedição. Use isto ao criar planetas novos e confira com o simulador.",
+    "terra_para_lua": "8-10 min",
+    "lua_para_marte": "~20 min (Marte em ~30 min de jogo, ainda na 1ª sessão)",
+    "marte_para_proximo": "3-4 dias",
+    "cada_planeta_seguinte": "+1 dia em relação ao anterior",
+    "teto_por_planeta": "7 dias (rebirths deixam mais curto)"
+  },
+
+  "retencao": {
+    "_regra": "Ganchos para o jogador voltar. Nenhum pune quem fica sem jogar.",
+    "pecas_da_nave_como_metas": true,
+    "bau_offline": { "mostrar_ao_voltar": true, "anuncio_dobra": true },
+    "missoes_diarias": { "quantidade": 3, "cristais_cada": 5 },
+    "sequencia_de_login": {
+      "dias": 7,
+      "perdeu_um_dia": "pausa a sequência (não zera)",
+      "recompensas": ["cristais:10", "boost_2x_30min", "cristais:15", "boost_2x_60min", "cristais:20", "boost_2x_120min", "animacao_viagem:primeira_semana"]
+    },
+    "nave_de_marte_concluida_no_mvp": { "cristais": 100, "animacao_viagem": "pioneiro", "libera": "rebirth" },
+    "notificacoes": { "opcional": true, "maximo_por_dia": 2, "tipos": ["cofre_offline_cheio", "peca_da_nave_pronta"] }
   },
 
   "cristais": {

@@ -84,9 +84,15 @@ class Jogo:
 
     def tenta_lancar(self):
         req = self.requisitos()
-        if PLANETAS[self.atual]["nave"]["destino"] not in IDX:
+        destino = PLANETAS[self.atual]["nave"]["destino"]
+        pronta = all(self.barras[p] >= v for p, v in req.items())
+        if destino not in IDX:
+            # Último planeta do conteúdo atual: só registra quando a nave ficaria pronta.
+            if pronta and destino not in self.chegadas:
+                self.chegadas[destino] = self.t
+                self.tela_chegada[destino] = self.tela
             return False
-        if all(self.barras[p] >= v for p, v in req.items()):
+        if pronta:
             for p, v in req.items():
                 self.barras[p] -= v
             self.atual += 1
@@ -167,29 +173,30 @@ def fmt(seg):
     return f"{seg / 86400:.1f} dias"
 
 
-def relatorio(nome, jogo, extra=""):
-    print(f"\n=== {nome} ===")
-    for pid, t in jogo.chegadas.items():
-        if pid != "terra":
-            print(f"  Chegou em {pid:6s}: {fmt(t)}{extra}")
+def rotulo(pid):
+    return f"Chegou em {pid}" if pid in IDX else "Nave de Marte pronta (próximo planeta)"
 
 
 def jogador_continuo(bonus):
     j = Jogo(bonus)
-    marcas = {}
     while j.atual < IDX["marte"] and j.t < 30 * 86400:
-        j.jogar_online(600)
+        j.jogar_online(60)
     t_marte = j.t
+    marcas = {}
     for horas in (0, 24, 72):
         alvo = t_marte + horas * 3600
         if j.t < alvo:
             j.jogar_online(alvo - j.t)
         marcas[horas] = j.poeira()
-    relatorio("Jogador contínuo (sempre online, tempo de jogo)", j)
+    print("\n=== Jogador contínuo (sempre online, tempo de jogo) ===")
+    for pid, t in j.chegadas.items():
+        if pid != "terra":
+            print(f"  {rotulo(pid)}: {fmt(t)}")
     for h, p in marcas.items():
         print(f"  Poeira se fizer rebirth {h:2d}h depois de chegar em Marte: {p}")
 
 
+PRIMEIRA_SESSAO_MIN = 35   # a 1ª vez que a pessoa abre o jogo é a sessão mais longa
 SESSOES = [  # (hora de início, minutos online) num dia típico
     (8.0, 8), (12.5, 8), (18.0, 8), (21.0, 8), (23.0, 8),
 ]
@@ -203,16 +210,46 @@ def jogador_tipico(bonus, dias=14):
             inicio = dia * 86400 + hora * 3600
             if j.t < inicio:
                 j.ficar_offline(inicio - j.t)
-            dur = (15 if dia == 0 and k == 0 else mins) * 60   # 1ª sessão mais longa (tutorial)
+            dur = (PRIMEIRA_SESSAO_MIN if dia == 0 and k == 0 else mins) * 60
             j.jogar_online(dur)
         poeira_por_dia.append(j.poeira() if j.atual >= IDX["marte"] else None)
-    print("\n=== Jogador típico (5 sessões de 8 min por dia) ===")
+    print(f"\n=== Jogador típico (1ª sessão de {PRIMEIRA_SESSAO_MIN} min, depois 5 sessões de 8 min/dia) ===")
     for pid, t in j.chegadas.items():
         if pid != "terra":
-            print(f"  Chegou em {pid:6s}: dia {t / 86400 + 1:.1f} ({fmt(j.tela_chegada[pid])} de tela)")
+            print(f"  {rotulo(pid)}: dia {t / 86400 + 1:.1f} ({fmt(j.tela_chegada[pid])} de tela)")
     print("  Poeira se fizer rebirth no fim do dia:")
     print("   " + "  ".join(f"d{d + 1}={p}" for d, p in enumerate(poeira_por_dia) if p is not None))
     return j
+
+
+BONUS_POR_POEIRA = 0.1   # aproximação da árvore: ~10 Poeira bem gastas ≈ 2x mais forte
+
+
+def jogador_com_rebirth(dias=21, minimo=8):
+    """Jogador típico que faz rebirth assim que pode (nave de Marte pronta) e a Poeira nova vale a pena."""
+    poeira_total = 0
+    j = Jogo(1.0)
+    inicio_exp = 0.0
+    eventos = []
+    for dia in range(dias):
+        for k, (hora, mins) in enumerate(SESSOES):
+            inicio = dia * 86400 + hora * 3600
+            if j.t < inicio:
+                j.ficar_offline(inicio - j.t)
+            dur = (PRIMEIRA_SESSAO_MIN if dia == 0 and k == 0 else mins) * 60
+            j.jogar_online(dur)
+            if "em_breve" in j.chegadas and j.poeira() >= max(minimo, poeira_total):
+                ganho = j.poeira()
+                eventos.append((inicio_exp, j.chegadas["em_breve"], j.t, ganho))
+                poeira_total += ganho
+                t, tela = j.t, j.tela
+                j = Jogo(1.0 + BONUS_POR_POEIRA * poeira_total)
+                j.t, j.tela = t, tela
+                inicio_exp = t
+    print(f"\n=== Jogador típico com rebirth (libera com a nave de Marte pronta; bônus ≈ +{BONUS_POR_POEIRA:.0%} por Poeira) ===")
+    for n, (ini_e, nave, rb, g) in enumerate(eventos, 1):
+        print(f"  Expedição {n}: começou dia {ini_e / 86400 + 1:.1f}, nave de Marte em {fmt(nave - ini_e)}, "
+              f"rebirth dia {rb / 86400 + 1:.1f} (+{g} Poeira)")
 
 
 if __name__ == "__main__":
@@ -222,3 +259,4 @@ if __name__ == "__main__":
     a = ap.parse_args()
     jogador_continuo(a.bonus)
     jogador_tipico(a.bonus)
+    jogador_com_rebirth()

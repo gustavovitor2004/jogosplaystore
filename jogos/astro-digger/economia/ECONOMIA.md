@@ -28,8 +28,8 @@ Cada planeta tem:
 | Planeta | Escala de produção | Nave pede |
 |---------|-------------------|-----------|
 | Terra | unidades → milhares | 12 mil Barras de Ferro |
-| Lua | milhares → milhões | 600 mil Titânio + **900 mil Ferro** (da Terra) |
-| Marte | milhões → trilhões | 20 mi Hematita + **30 mi Titânio** (da Lua). Meta de longo prazo, libera o próximo planeta numa atualização |
+| Lua | milhares → milhões | 40 mil Titânio + **60 mil Ferro** (da Terra) |
+| Marte | milhões → trilhões | 500 mil Hematita + **800 mil Titânio** (da Lua). No MVP, concluir a nave libera o rebirth; na atualização, leva ao Cinturão de Asteroides |
 
 **Dependência:** a nave de cada planeta pede Barras do planeta anterior. Por isso vale a pena continuar melhorando a refinaria da Terra mesmo estando na Lua.
 
@@ -45,7 +45,8 @@ A árvore de habilidades aumenta o limite offline até 12 h e a eficiência até
 
 ## 4. Rebirth: "Nova Expedição"
 
-- **Libera:** ao chegar em Marte.
+- **Libera:** ao construir a nave de Marte (por volta do dia 4 ou 5 pro jogador típico).
+  - Por que não antes? O simulador mostrou que um rebirth antes disso **atrasa** o jogador (ele perde mais do que ganha). Liberar só quando vale a pena evita essa armadilha.
 - **O que reseta:** Créditos, Barras, minas, refinarias e planetas (você volta pra Terra).
 - **O que fica:** Poeira Estelar, árvore de habilidades, Cristais, skins e animações de viagem.
 - **Fórmula:** `Poeira = (créditos ganhos na expedição ÷ 100 bilhões) ^ (1/3)`, arredondado pra baixo.
@@ -65,21 +66,56 @@ Cada ramo tem 4 nós. Pra liberar um nó, precisa ter pelo menos 1 ponto no nó 
 **Custo:** os nós de vários níveis custam 1, 2, 3... Poeira (cada nível custa 1 a mais). Os nós de nível único têm preço fixo.
 Com cerca de 10 Poeira (o primeiro rebirth), o jogador fica em média **2× mais forte**.
 
-## 6. Ritmo do jogo (resultado do simulador)
+## 6. Ritmo do jogo
 
-**Jogador típico** (5 sessões de 8 minutos por dia):
-| Marco | 1ª expedição | 2ª expedição (com árvore ≈ 2×) |
-|-------|--------------|-------------------------------|
-| Chega na Lua | dia 1, ~9 min de tela (1ª sessão) | ~4 min de tela |
-| Chega em Marte | dia 3 (~1 h de tela) | dia 2 (~40 min de tela) |
-| Rebirth recomendado | dia 5 a 6 (~9 a 12 Poeira) | dia 5 a 6 (~17 a 21 Poeira) |
+### A regra
+- **1ª sessão (a mais longa, ~35 min):** Terra → Lua → Marte. O jogador vê **dois lançamentos de nave** logo na primeira vez que joga.
+- **Depois disso, cada planeta demora mais que o anterior**, sem passar de uma semana:
 
-**Jogador contínuo** (sempre online): Lua em 9 min e Marte em 4,6 h.
+| Viagem | Tempo-alvo (jogador típico, 1ª expedição) |
+|--------|-------------------------------------------|
+| Terra → Lua | 8 a 10 min |
+| Lua → Marte | ~20 min (Marte com ~30 min de jogo) |
+| Marte → Cinturão de Asteroides | 3 a 4 dias |
+| Cada planeta seguinte | +1 dia em relação ao anterior |
+| Teto | 7 dias por planeta (os rebirths deixam mais curto) |
 
-O ritmo segue o padrão que funciona em idle: **começo rápido** (o jogador já viaja de planeta na primeira sessão), meio mais calmo, e cada rebirth deixando o anterior mais rápido. Estimativa da equipe (o simulador só mede até o 2º rebirth): o MVP deve render umas **3 a 4 semanas** de conteúdo até a primeira atualização de planeta.
+Isso também está em `economia.json` → `ritmo_alvo`, pra servir de guia quando criarmos planetas novos.
 
-> Pra rodar: `python simulador.py` (ou `python simulador.py --bonus 2` pra simular depois do rebirth).
+### O que o simulador mediu
+**Jogador contínuo** (sempre online): Lua em **9 min**, Marte em **32 min**, nave de Marte em 17 h.
+
+**Jogador típico** (1ª sessão de 35 min, depois 5 sessões de 8 min por dia):
+| Marco | Quando |
+|-------|--------|
+| Chega na Lua | 1ª sessão, ~9 min |
+| Chega em Marte | 1ª sessão, ~32 min |
+| Nave de Marte pronta (libera rebirth) | dia 4 a 5 |
+
+**Jogador típico fazendo rebirth** (cada volta mais rápida):
+| Expedição | Nave de Marte em | Poeira ganha |
+|-----------|------------------|--------------|
+| 1ª | 3,9 dias | +10 |
+| 2ª | 2,5 dias | +11 |
+| 3ª | 1,6 dia | +23 |
+| 4ª | 1,2 dia | +46 |
+| 5ª | 18 h | +92 |
+
+Quando a volta começa a ficar curta demais (por volta da 2ª ou 3ª semana), é a hora certa de lançar o **Cinturão de Asteroides**, a primeira atualização de planeta.
+
+> Pra rodar: `python simulador.py` (ou `python simulador.py --bonus 2` pra simular com bônus).
 > O simulador é uma estimativa. Depois do lançamento, compare com os dados reais (Firebase Analytics) e ajuste.
+
+### Ganchos pra pessoa voltar (sem punir quem some)
+| Gancho | Como funciona |
+|--------|---------------|
+| 🚀 Peças da nave | A nave de Marte tem 4 peças, mais ou menos **uma por dia**. Sempre existe uma meta pro dia seguinte |
+| 📦 Baú offline | Ao voltar: "enquanto você estava fora, suas minas renderam X". Um anúncio opcional dobra o valor |
+| 📋 Missões diárias | 3 por dia, 5 Cristais cada |
+| 📅 Sequência de 7 dias | Cristais e boosts. No 7º dia vem a **animação de viagem "Primeira Semana"** (exclusiva). Perder um dia **pausa** a sequência, sem zerar |
+| 🏆 Nave de Marte concluída | 100 Cristais + animação **"Pioneiro"**, e libera o rebirth |
+| 🔔 Notificações | Opcionais, no máximo 2 por dia: "cofre offline cheio" e "peça da nave pronta" |
+| ⭐ Marcos de nível | Sempre tem um "×2" perto de chegar (nível 25, 50, 100...) |
 
 ## 7. Anúncios recompensados (sempre opcionais)
 - **Produção ×2 por 30 min** por anúncio, acumulando até 4 h
