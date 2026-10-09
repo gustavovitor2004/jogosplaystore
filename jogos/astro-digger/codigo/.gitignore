@@ -1,0 +1,11 @@
+# Cache do editor Godot (é recriado sozinho)
+.godot/
+# Templates de build Android e exportações
+android/
+build/
+*.apk
+*.aab
+# Chaves de assinatura NUNCA vão pro repositório
+*.keystore
+*.jks
+export_credentials.cfg

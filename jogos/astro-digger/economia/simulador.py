@@ -1,7 +1,7 @@
 """
 Simulador de economia do Astro Digger.
 
-Lê economia.json e simula um jogador "comprando com bom senso" pra medir
+Lê codigo/data/economia.json e simula um jogador "comprando com bom senso" pra medir
 quanto tempo leva pra construir cada nave e quanta Poeira Estelar rende o
 primeiro rebirth.
 
@@ -18,7 +18,9 @@ import math
 import sys
 from pathlib import Path
 
-CONFIG = json.loads((Path(__file__).parent / "economia.json").read_text(encoding="utf-8"))
+# O arquivo mora dentro do projeto Godot: o jogo e o simulador leem exatamente os mesmos números.
+CAMINHO_CONFIG = Path(__file__).resolve().parent.parent / "codigo" / "data" / "economia.json"
+CONFIG = json.loads(CAMINHO_CONFIG.read_text(encoding="utf-8"))
 G = CONFIG["global"]
 PLANETAS = CONFIG["planetas"]
 IDX = {p["id"]: i for i, p in enumerate(PLANETAS)}

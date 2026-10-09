@@ -1,6 +1,6 @@
 # Economia — Astro Digger (MVP)
 
-> Todos os números ficam em [`economia.json`](economia.json). O jogo lê esse arquivo, então **pra balancear não precisa mexer em código**: muda o número, roda o simulador e confere.
+> Todos os números ficam em [`codigo/data/economia.json`](../codigo/data/economia.json), dentro do projeto do jogo. O jogo e o simulador leem esse mesmo arquivo, então **pra balancear não precisa mexer em código**: muda o número, roda o simulador e confere.
 
 ## 1. Moedas
 

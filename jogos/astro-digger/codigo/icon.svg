@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Ícone provisório do protótipo. O ícone final vem do Designer Visual. -->
+  <rect width="128" height="128" rx="24" fill="#0b1020"/>
+  <circle cx="64" cy="78" r="34" fill="#3b6fd8"/>
+  <path d="M40 70c10-6 22 6 34-2s16 2 22 0" stroke="#4caf50" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M64 14l14 30H50z" fill="#f5a623"/>
+  <rect x="58" y="44" width="12" height="16" fill="#f5a623"/>
+</svg>
