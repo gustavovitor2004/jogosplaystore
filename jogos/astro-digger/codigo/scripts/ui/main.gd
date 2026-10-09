@@ -20,6 +20,7 @@ var _acumulador := 0.0
 var _planeta_montado := -1
 var _desbloqueados_montados := -1
 
+var _fundo: ColorRect
 var _lbl_creditos: Label
 var _lbl_renda: Label
 var _btn_modo: Button
@@ -66,10 +67,10 @@ func _process(delta: float) -> void:
 # ---------- montagem ----------
 
 func _montar_layout() -> void:
-	var fundo := ColorRect.new()
-	fundo.color = Estilo.COR_FUNDO
-	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fundo)
+	_fundo = ColorRect.new()
+	_fundo.color = Estilo.COR_FUNDO
+	_fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_fundo)
 
 	var margem := MarginContainer.new()
 	margem.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -193,6 +194,9 @@ func _reconstruir() -> void:
 		fragmento.queue_free()
 	var p := Jogo.planeta_atual
 	_lbl_planeta.text = Economia.planetas[p]["nome"]
+	var id_planeta: String = Economia.planetas[p]["id"]
+	_fundo.color = Estilo.cor_planeta(id_planeta, "fundo")
+	_lbl_planeta.add_theme_color_override("font_color", Estilo.cor_planeta(id_planeta, "titulo"))
 	_criar_painel_mecanica(p)
 	_lista.add_child(_titulo_secao("Minas"))
 	for i in Economia.planetas[p]["minas"].size():

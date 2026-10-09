@@ -10,6 +10,20 @@ const COR_POEIRA := Color("b388ff")
 const COR_TEXTO_FRACO := Color("8a93b2")
 const COR_SELECIONADO := Color("3d4f8a")
 
+## Cor de cada planeta (design/IDENTIDADE_VISUAL.md): o fundo continua escuro pra
+## ler bem, só puxado pro tom do planeta; o título usa a cor forte dele.
+const PLANETAS := {
+	"terra": {"fundo": Color("0e1a16"), "titulo": Color("7cc46b")},
+	"lua": {"fundo": Color("10131c"), "titulo": Color("c9d6e8")},
+	"marte": {"fundo": Color("1c0f0c"), "titulo": Color("e0703a")},
+}
+
+
+## Cor de um planeta pelo id; se o planeta ainda não tem paleta, usa a padrão.
+static func cor_planeta(id: String, chave: String) -> Color:
+	var padrao := {"fundo": COR_FUNDO, "titulo": Color.WHITE}
+	return PLANETAS.get(id, padrao).get(chave, padrao[chave])
+
 
 static func tema() -> Theme:
 	var t := Theme.new()
