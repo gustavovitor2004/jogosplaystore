@@ -13,7 +13,15 @@ signal viagem_comecou(de: int, para: int)
 signal planeta_desbloqueado(p: int)
 signal rebirth_feito(poeira_ganha: int)
 
-const VERSAO_SAVE := 1
+## v2: dados por planeta/mina guardados pelo id (não pela posição), pra
+## atualizações poderem adicionar planetas e minas sem bagunçar o progresso.
+const VERSAO_SAVE := 2
+## Ordem das minas no save v1 (protótipo com 3 minas por planeta), pra converter.
+const MINAS_SAVE_V1 := {
+	"terra": ["superficie", "caverna", "nucleo"],
+	"lua": ["cratera", "mar_lunar", "manto"],
+	"marte": ["planicie", "canion", "calota"],
+}
 const CAMINHO_SAVE := "user://save.json"
 const INTERVALO_AUTOSAVE := 10.0
 ## Duração fixa da animação de viagem. Não dá pra pular porque é um item cosmético.
@@ -464,12 +472,9 @@ func salvar() -> void:
 		"versao": VERSAO_SAVE,
 		"creditos": creditos,
 		"creditos_expedicao": creditos_expedicao,
-		"minas": minas,
-		"refinarias": refinarias,
-		"barras": barras,
-		"naves_prontas": naves_prontas,
+		"planetas": _planetas_para_save(),
 		"desbloqueados": desbloqueados,
-		"planeta_atual": planeta_atual,
+		"planeta_atual": Economia.planetas[planeta_atual]["id"],
 		"poeira": poeira,
 		"poeira_total": poeira_total,
 		"expedicoes": expedicoes,
@@ -494,28 +499,54 @@ func carregar() -> void:
 	if not FileAccess.file_exists(caminho_save):
 		return
 	var dados: Variant = JSON.parse_string(FileAccess.get_file_as_string(caminho_save))
-	if typeof(dados) != TYPE_DICTIONARY or int(dados.get("versao", 0)) != VERSAO_SAVE:
-		# Save corrompido ou de outra versão: começa do zero sem travar o jogo.
+	if typeof(dados) != TYPE_DICTIONARY or int(dados.get("versao", 0)) not in [1, VERSAO_SAVE]:
+		# Save corrompido ou de versão desconhecida: começa do zero sem travar o jogo.
 		push_warning("Save inválido, começando um jogo novo.")
 		return
+	if int(dados["versao"]) == 1:
+		dados = _converter_save_v1(dados)
 	_aplicar_save(dados)
 	aplicar_offline(_agora() - float(dados.get("salvo_em", _agora())))
 
 
-## Copia os valores do save com cuidado: se o jogo ganhou planetas, minas ou nós
-## novos numa atualização, os que não existiam no save ficam no valor inicial.
+func _planetas_para_save() -> Dictionary:
+	var resultado := {}
+	for p in Economia.planetas.size():
+		var niveis := {}
+		for i in minas[p].size():
+			niveis[Economia.mina(p, i)["id"]] = minas[p][i]
+		resultado[Economia.planetas[p]["id"]] = {
+			"minas": niveis,
+			"refinaria": refinarias[p],
+			"barras": barras[p],
+			"nave_pronta": naves_prontas[p],
+		}
+	return resultado
+
+
+## Copia os valores do save com cuidado: o que o jogo tem e o save não tem
+## (planeta, mina ou nó novo de uma atualização) fica no valor inicial, e o que
+## o save tem e o jogo não tem mais é ignorado.
 func _aplicar_save(dados: Dictionary) -> void:
 	creditos = max(0.0, float(dados.get("creditos", creditos)))
 	creditos_expedicao = max(0.0, float(dados.get("creditos_expedicao", 0.0)))
-	var minas_salvas: Array = dados.get("minas", [])
-	for p in min(minas.size(), minas_salvas.size()):
-		for i in min(minas[p].size(), minas_salvas[p].size()):
-			minas[p][i] = max(0, int(minas_salvas[p][i]))
-	_copiar_lista(refinarias, dados.get("refinarias", []), func(v): return max(0, int(v)))
-	_copiar_lista(barras, dados.get("barras", []), func(v): return max(0.0, float(v)))
-	_copiar_lista(naves_prontas, dados.get("naves_prontas", []), func(v): return bool(v))
+	var planetas_salvos: Variant = dados.get("planetas", {})
+	if typeof(planetas_salvos) != TYPE_DICTIONARY:
+		planetas_salvos = {}
+	for p in Economia.planetas.size():
+		var salvo: Variant = planetas_salvos.get(Economia.planetas[p]["id"], {})
+		if typeof(salvo) != TYPE_DICTIONARY:
+			continue
+		var niveis: Variant = salvo.get("minas", {})
+		if typeof(niveis) == TYPE_DICTIONARY:
+			for i in minas[p].size():
+				minas[p][i] = max(0, int(niveis.get(Economia.mina(p, i)["id"], 0)))
+		refinarias[p] = max(0, int(salvo.get("refinaria", 0)))
+		barras[p] = max(0.0, float(salvo.get("barras", 0.0)))
+		naves_prontas[p] = bool(salvo.get("nave_pronta", false))
 	desbloqueados = clamp(int(dados.get("desbloqueados", 1)), 1, Economia.planetas.size())
-	planeta_atual = clamp(int(dados.get("planeta_atual", 0)), 0, desbloqueados - 1)
+	var atual := Economia.indice_planeta(String(dados.get("planeta_atual", "")))
+	planeta_atual = clamp(atual, 0, desbloqueados - 1)
 	poeira = max(0, int(dados.get("poeira", 0)))
 	poeira_total = max(poeira, int(dados.get("poeira_total", 0)))
 	expedicoes = max(0, int(dados.get("expedicoes", 0)))
@@ -530,9 +561,30 @@ func _aplicar_save(dados: Dictionary) -> void:
 	_recalcular_efeitos()
 
 
-func _copiar_lista(destino: Array, origem: Array, converter: Callable) -> void:
-	for k in min(destino.size(), origem.size()):
-		destino[k] = converter.call(origem[k])
+## Converte o save do protótipo antigo (listas por posição) pro formato por id.
+func _converter_save_v1(antigo: Dictionary) -> Dictionary:
+	var ids := ["terra", "lua", "marte"]
+	var planetas := {}
+	for k in ids.size():
+		var niveis := {}
+		var minas_antigas: Array = antigo.get("minas", [])
+		if k < minas_antigas.size():
+			for i in min(minas_antigas[k].size(), MINAS_SAVE_V1[ids[k]].size()):
+				niveis[MINAS_SAVE_V1[ids[k]][i]] = minas_antigas[k][i]
+		planetas[ids[k]] = {
+			"minas": niveis,
+			"refinaria": _item_ou(antigo.get("refinarias", []), k, 0),
+			"barras": _item_ou(antigo.get("barras", []), k, 0.0),
+			"nave_pronta": _item_ou(antigo.get("naves_prontas", []), k, false),
+		}
+	var novo := antigo.duplicate()
+	novo["planetas"] = planetas
+	novo["planeta_atual"] = ids[clamp(int(antigo.get("planeta_atual", 0)), 0, ids.size() - 1)]
+	return novo
+
+
+func _item_ou(lista: Variant, k: int, padrao: Variant) -> Variant:
+	return lista[k] if typeof(lista) == TYPE_ARRAY and k < lista.size() else padrao
 
 
 ## Só pra testes: apaga o save e recomeça do zero (inclusive Poeira e árvore).

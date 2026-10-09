@@ -14,7 +14,10 @@
 ## 2. Como cada planeta funciona
 
 Cada planeta tem:
-- **3 minas** que produzem Créditos por segundo. A segunda e a terceira mina destravam em sequência.
+- **8 minas** que produzem Créditos por segundo. Cada uma só libera depois da anterior.
+  - Cada mina produz **3x** a anterior e custa **6,5x** mais, então as últimas viram metas de longo prazo.
+  - Elas também ficam um pouco mais caras por nível (crescimento de 15% na 1ª até 18,5% na 8ª).
+  - Ritmo medido no simulador: na Terra, 6 minas saem nos primeiros 9 min (uma nova a cada ~1,5 min). As 2 últimas ficam pra depois. Em Marte, a 8ª mina aparece por volta do dia 3.
 - **1 refinaria** que produz Barras por segundo.
 - **1 nave** com 4 partes, construída com Barras.
 

@@ -81,6 +81,10 @@ func _testar_formulas() -> void:
 				ok = false
 	_checar(ok, "botão MÁX compra o máximo possível, sem passar do dinheiro")
 	_checar(eco.destino_nave(0) == 1 and eco.destino_nave(2) == -1, "naves: Terra -> Lua, Marte -> em breve")
+	var oito := true
+	for planeta in eco.planetas:
+		oito = oito and planeta["minas"].size() == 8
+	_checar(oito, "cada planeta tem 8 minas")
 
 
 func _testar_formatar() -> void:
@@ -149,6 +153,27 @@ func _testar_save() -> void:
 	_checar(terceiro.minas[0][1] == 0, "save corrompido não trava: começa do zero")
 	for j in [jogo, outro, terceiro]:
 		j.free()
+
+	# Save do protótipo antigo (v1: 3 minas, listas por posição) é convertido.
+	arquivo = FileAccess.open(SAVE_TESTE, FileAccess.WRITE)
+	arquivo.store_string(JSON.stringify({
+		"versao": 1, "creditos": 500.0, "minas": [[12, 7, 3], [4, 0, 0], [0, 0, 0]],
+		"refinarias": [5, 1, 0], "barras": [100.0, 2.0, 0.0], "naves_prontas": [true, false, false],
+		"desbloqueados": 2, "planeta_atual": 1, "salvo_em": Time.get_unix_time_from_system(),
+	}))
+	arquivo.close()
+	var antigo := _jogo_novo()
+	antigo.carregar()
+	var eco: Node = root.get_node("Economia")
+	var i_caverna := -1
+	for i in eco.planetas[0]["minas"].size():
+		if eco.mina(0, i)["id"] == "caverna":
+			i_caverna = i
+	_checar(antigo.minas[0][0] == 12 and antigo.minas[0][i_caverna] == 7 and antigo.minas[0][7] == 3,
+		"save antigo (v1) é convertido: cada mina volta pro lugar certo pelo id")
+	_checar(antigo.desbloqueados == 2 and antigo.planeta_atual == 1 and antigo.naves_prontas[0] and antigo.refinarias[0] == 5,
+		"save antigo mantém planetas, nave e refinaria")
+	antigo.free()
 	DirAccess.remove_absolute(SAVE_TESTE)
 
 

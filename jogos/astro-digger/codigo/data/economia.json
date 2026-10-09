@@ -19,8 +19,13 @@
       "barra": "Barra de Ferro",
       "minas": [
         { "id": "superficie", "nome": "Superfície", "producao_base": 1, "custo_base": 10, "crescimento": 1.15 },
-        { "id": "caverna", "nome": "Caverna", "producao_base": 15, "custo_base": 600, "crescimento": 1.16 },
-        { "id": "nucleo", "nome": "Núcleo Rochoso", "producao_base": 220, "custo_base": 40000, "crescimento": 1.17 }
+        { "id": "pedreira", "nome": "Pedreira", "producao_base": 3, "custo_base": 65, "crescimento": 1.155 },
+        { "id": "caverna", "nome": "Caverna", "producao_base": 9, "custo_base": 422, "crescimento": 1.16 },
+        { "id": "mina_carvao", "nome": "Mina de Carvão", "producao_base": 27, "custo_base": 2750, "crescimento": 1.165 },
+        { "id": "veio_cobre", "nome": "Veio de Cobre", "producao_base": 81, "custo_base": 17900, "crescimento": 1.17 },
+        { "id": "jazida_ferro", "nome": "Jazida de Ferro", "producao_base": 243, "custo_base": 1.16e5, "crescimento": 1.175 },
+        { "id": "tunel_profundo", "nome": "Túnel Profundo", "producao_base": 729, "custo_base": 7.54e5, "crescimento": 1.18 },
+        { "id": "nucleo", "nome": "Núcleo Rochoso", "producao_base": 2190, "custo_base": 4.9e6, "crescimento": 1.185 }
       ],
       "refinaria": { "barras_por_segundo_base": 0.2, "custo_base": 300, "crescimento": 1.2 },
       "nave": {
@@ -34,9 +39,14 @@
       "nome": "Lua",
       "barra": "Barra de Titânio",
       "minas": [
-        { "id": "cratera", "nome": "Cratera", "producao_base": 1500, "custo_base": 2.0e4, "crescimento": 1.15 },
-        { "id": "mar_lunar", "nome": "Mar Lunar", "producao_base": 25000, "custo_base": 1.5e6, "crescimento": 1.16 },
-        { "id": "manto", "nome": "Manto Lunar", "producao_base": 400000, "custo_base": 1.2e8, "crescimento": 1.17 }
+        { "id": "cratera", "nome": "Cratera", "producao_base": 1500, "custo_base": 20000, "crescimento": 1.15 },
+        { "id": "regolito", "nome": "Campo de Regolito", "producao_base": 4500, "custo_base": 1.3e5, "crescimento": 1.155 },
+        { "id": "mar_lunar", "nome": "Mar Lunar", "producao_base": 13500, "custo_base": 8.45e5, "crescimento": 1.16 },
+        { "id": "polo_sul", "nome": "Polo Sul Gelado", "producao_base": 40500, "custo_base": 5.49e6, "crescimento": 1.165 },
+        { "id": "montanhas", "nome": "Montanhas Lunares", "producao_base": 1.22e5, "custo_base": 3.57e7, "crescimento": 1.17 },
+        { "id": "tubo_lava", "nome": "Tubo de Lava", "producao_base": 3.64e5, "custo_base": 2.32e8, "crescimento": 1.175 },
+        { "id": "lado_oculto", "nome": "Lado Oculto", "producao_base": 1.09e6, "custo_base": 1.51e9, "crescimento": 1.18 },
+        { "id": "manto", "nome": "Manto Lunar", "producao_base": 3.28e6, "custo_base": 9.8e9, "crescimento": 1.185 }
       ],
       "refinaria": { "barras_por_segundo_base": 0.1, "custo_base": 5.0e4, "crescimento": 1.2 },
       "nave": {
@@ -50,9 +60,14 @@
       "nome": "Marte",
       "barra": "Barra de Hematita",
       "minas": [
-        { "id": "planicie", "nome": "Planície Vermelha", "producao_base": 3.0e6, "custo_base": 5.0e9, "crescimento": 1.15 },
-        { "id": "canion", "nome": "Valles Marineris", "producao_base": 5.0e7, "custo_base": 4.0e11, "crescimento": 1.16 },
-        { "id": "calota", "nome": "Calota Polar", "producao_base": 8.0e8, "custo_base": 3.5e13, "crescimento": 1.17 }
+        { "id": "planicie", "nome": "Planície Vermelha", "producao_base": 3e6, "custo_base": 5e9, "crescimento": 1.15 },
+        { "id": "dunas", "nome": "Dunas de Ferro", "producao_base": 9e6, "custo_base": 3.25e10, "crescimento": 1.155 },
+        { "id": "cratera_gale", "nome": "Cratera Gale", "producao_base": 2.7e7, "custo_base": 2.11e11, "crescimento": 1.16 },
+        { "id": "olympus", "nome": "Olympus Mons", "producao_base": 8.1e7, "custo_base": 1.37e12, "crescimento": 1.165 },
+        { "id": "canion", "nome": "Valles Marineris", "producao_base": 2.43e8, "custo_base": 8.93e12, "crescimento": 1.17 },
+        { "id": "gelo", "nome": "Gelo Subterrâneo", "producao_base": 7.29e8, "custo_base": 5.8e13, "crescimento": 1.175 },
+        { "id": "calota", "nome": "Calota Polar", "producao_base": 2.19e9, "custo_base": 3.77e14, "crescimento": 1.18 },
+        { "id": "nucleo_marciano", "nome": "Núcleo Marciano", "producao_base": 6.56e9, "custo_base": 2.45e15, "crescimento": 1.185 }
       ],
       "refinaria": { "barras_por_segundo_base": 0.05, "custo_base": 1.0e10, "crescimento": 1.2 },
       "nave": {
