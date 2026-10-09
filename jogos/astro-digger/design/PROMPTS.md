@@ -110,4 +110,5 @@ Cada planeta tem nave mais avançada que a anterior: Terra = foguete simples de 
 ## Registro de geração
 | Peça | Ferramenta | Data | Observação |
 |------|-----------|------|------------|
-| | | | |
+| Ícone, conceito A e B | Higgsfield, modelo Z Image (plano grátis) | 09/10/2026 | Prompt da seção 1 adaptado. Rascunho de direção, não é arte final |
+| Pip, conceito A e B | Higgsfield, modelo Z Image (plano grátis) | 09/10/2026 | Prompt da seção 5. Rascunho de direção, não é arte final |
