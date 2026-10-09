@@ -29,6 +29,13 @@ app icon, a chunky rocket whose nose is a golden spiral drill bit, bursting up o
 
 ✅ Checklist: reconhecível em 48 px? Sem texto? Sem sombra externa? Ocupa o quadrado inteiro (a loja arredonda os cantos)?
 
+### 1b. Ícone v2 (depois da avaliação do conceito A)
+A IA ignorou a broca na 1ª rodada. Esta versão deixa a broca explícita e o desenho maior:
+```
+app icon, a big chunky golden rocket flying straight up, its nose cone is a giant conical spiral drill bit with clearly visible helical grooves like the tip of an auger screw, bursting out of the top of a small round planet cut in half showing colorful horizontal rock layers (green grass, brown soil, clay orange, dark rock, glowing orange core), small amber flame and rock chunks below the rocket, rocket and planet fill 85% of the square, deep navy background #0B1020, amber #F5A623 and rust #C1440E accents, [BLOCO DE ESTILO] --ar 1:1 --style raw --s 50 --no photorealistic, 3d render, glossy, text, watermark, lens flare
+```
+Se a broca ainda não sair direito: gere o foguete do conceito A e **desenhe a broca por cima** no Figma ou Inkscape (é só um cone com 4 ou 5 faixas em diagonal).
+
 ## 2. Ícone adaptativo Android (3 camadas de 432×432)
 - **Fundo:** `flat navy background #0B1020 with a subtle amber planet curve at the bottom, [BLOCO DE ESTILO] --ar 1:1`
 - **Frente:** o foguete-broca **sozinho, fundo transparente**, ocupando só o círculo central (66% da área). Recorte a partir do ícone principal
