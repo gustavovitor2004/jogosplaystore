@@ -1,0 +1,142 @@
+{
+  "_sobre": "Fonte única dos números da economia do Astro Digger (MVP). O jogo e o simulador leem este arquivo. Mudou um número aqui? Rode o simulador antes de publicar.",
+  "versao": 1,
+
+  "global": {
+    "marcos_de_nivel": [10, 25, 50, 100, 150, 200, 300, 400, 500],
+    "multiplicador_por_marco": 2.0,
+    "bonus_presenca": 2.0,
+    "offline_limite_horas": 4,
+    "offline_eficiencia": 0.5,
+    "toque_segundos_de_producao": 0.5,
+    "creditos_iniciais": 10
+  },
+
+  "planetas": [
+    {
+      "id": "terra",
+      "nome": "Terra",
+      "barra": "Barra de Ferro",
+      "minas": [
+        { "id": "superficie", "nome": "Superfície", "producao_base": 1, "custo_base": 10, "crescimento": 1.15 },
+        { "id": "caverna", "nome": "Caverna", "producao_base": 15, "custo_base": 600, "crescimento": 1.16 },
+        { "id": "nucleo", "nome": "Núcleo Rochoso", "producao_base": 220, "custo_base": 40000, "crescimento": 1.17 }
+      ],
+      "refinaria": { "barras_por_segundo_base": 0.2, "custo_base": 300, "crescimento": 1.2 },
+      "nave": {
+        "destino": "lua",
+        "partes": ["Casco", "Motor", "Tanque", "Navegação"],
+        "custo_total_barras": { "terra": 12000 }
+      }
+    },
+    {
+      "id": "lua",
+      "nome": "Lua",
+      "barra": "Barra de Titânio",
+      "minas": [
+        { "id": "cratera", "nome": "Cratera", "producao_base": 1500, "custo_base": 2.0e5, "crescimento": 1.15 },
+        { "id": "mar_lunar", "nome": "Mar Lunar", "producao_base": 25000, "custo_base": 1.5e7, "crescimento": 1.16 },
+        { "id": "manto", "nome": "Manto Lunar", "producao_base": 400000, "custo_base": 1.2e9, "crescimento": 1.17 }
+      ],
+      "refinaria": { "barras_por_segundo_base": 0.1, "custo_base": 5.0e5, "crescimento": 1.2 },
+      "nave": {
+        "destino": "marte",
+        "partes": ["Casco", "Motor", "Tanque", "Navegação"],
+        "custo_total_barras": { "lua": 600000, "terra": 900000 }
+      }
+    },
+    {
+      "id": "marte",
+      "nome": "Marte",
+      "barra": "Barra de Hematita",
+      "minas": [
+        { "id": "planicie", "nome": "Planície Vermelha", "producao_base": 3.0e6, "custo_base": 5.0e9, "crescimento": 1.15 },
+        { "id": "canion", "nome": "Valles Marineris", "producao_base": 5.0e7, "custo_base": 4.0e11, "crescimento": 1.16 },
+        { "id": "calota", "nome": "Calota Polar", "producao_base": 8.0e8, "custo_base": 3.5e13, "crescimento": 1.17 }
+      ],
+      "refinaria": { "barras_por_segundo_base": 0.05, "custo_base": 1.0e10, "crescimento": 1.2 },
+      "nave": {
+        "destino": "em_breve",
+        "partes": ["Casco", "Motor", "Tanque", "Navegação"],
+        "custo_total_barras": { "marte": 2.0e7, "lua": 3.0e7 }
+      }
+    }
+  ],
+
+  "rebirth": {
+    "nome": "Nova Expedição",
+    "moeda": "Poeira Estelar",
+    "requisito": "chegar em Marte",
+    "formula": "poeira = floor( (creditos_ganhos_na_expedicao / divisor) ^ expoente )",
+    "divisor": 1.0e11,
+    "expoente": 0.3333
+  },
+
+  "arvore": {
+    "_regra": "custo do próximo nível = custo_base + custo_extra_por_nivel * nivel_atual. Um nó só libera com pelo menos 1 ponto no nó anterior do mesmo ramo.",
+    "ramos": [
+      {
+        "id": "mineracao", "nome": "Mineração",
+        "nos": [
+          { "id": "brocas_afiadas", "nome": "Brocas Afiadas", "efeito": "producao_global", "valor_por_nivel": 0.25, "nivel_max": 10, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "toque_pesado", "nome": "Toque Pesado", "efeito": "toque_mult", "valor_por_nivel": 2.0, "nivel_max": 1, "custo_base": 2, "custo_extra_por_nivel": 0 },
+          { "id": "veio_rico", "nome": "Veio Rico", "efeito": "primeira_mina_mult", "valor_por_nivel": 2.0, "nivel_max": 1, "custo_base": 4, "custo_extra_por_nivel": 0 },
+          { "id": "marcos_turbinados", "nome": "Marcos Turbinados", "efeito": "multiplicador_por_marco", "valor_por_nivel": 0.5, "nivel_max": 1, "custo_base": 20, "custo_extra_por_nivel": 0 }
+        ]
+      },
+      {
+        "id": "automacao", "nome": "Automação",
+        "nos": [
+          { "id": "refino_rapido", "nome": "Refino Rápido", "efeito": "barras_global", "valor_por_nivel": 0.2, "nivel_max": 10, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "gerente_inicial", "nome": "Gerente Inicial", "efeito": "inicia_mina_terra_nivel", "valor_por_nivel": 10, "nivel_max": 1, "custo_base": 2, "custo_extra_por_nivel": 0 },
+          { "id": "compra_automatica", "nome": "Compra Automática", "efeito": "auto_compra", "valor_por_nivel": 1, "nivel_max": 1, "custo_base": 5, "custo_extra_por_nivel": 0 },
+          { "id": "drones_de_colonia", "nome": "Drones de Colônia", "efeito": "producao_fora_de_presenca", "valor_por_nivel": 0.5, "nivel_max": 1, "custo_base": 12, "custo_extra_por_nivel": 0 }
+        ]
+      },
+      {
+        "id": "engenharia", "nome": "Engenharia",
+        "nos": [
+          { "id": "projeto_enxuto", "nome": "Projeto Enxuto", "efeito": "custo_nave", "valor_por_nivel": -0.05, "nivel_max": 6, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "capital_inicial", "nome": "Capital Inicial", "efeito": "creditos_iniciais", "valor_por_nivel": 1000, "nivel_max": 1, "custo_base": 1, "custo_extra_por_nivel": 0 },
+          { "id": "plataforma_pronta", "nome": "Plataforma Pronta", "efeito": "casco_terra_pronto", "valor_por_nivel": 1, "nivel_max": 1, "custo_base": 3, "custo_extra_por_nivel": 0 },
+          { "id": "refinaria_orbital", "nome": "Refinaria Orbital", "efeito": "refinaria_custo", "valor_por_nivel": -0.25, "nivel_max": 1, "custo_base": 10, "custo_extra_por_nivel": 0 }
+        ]
+      },
+      {
+        "id": "exploracao", "nome": "Exploração",
+        "nos": [
+          { "id": "cofre_offline", "nome": "Cofre Offline", "efeito": "offline_limite_horas", "valor_por_nivel": 1, "nivel_max": 8, "custo_base": 1, "custo_extra_por_nivel": 1 },
+          { "id": "eficiencia_offline", "nome": "Turno da Noite", "efeito": "offline_eficiencia", "valor_por_nivel": 0.1, "nivel_max": 5, "custo_base": 2, "custo_extra_por_nivel": 1 },
+          { "id": "faro_de_explorador", "nome": "Faro de Explorador", "efeito": "poeira_mult", "valor_por_nivel": 0.1, "nivel_max": 5, "custo_base": 3, "custo_extra_por_nivel": 2 },
+          { "id": "presenca_forte", "nome": "Presença Forte", "efeito": "bonus_presenca", "valor_por_nivel": 1.0, "nivel_max": 1, "custo_base": 15, "custo_extra_por_nivel": 0 }
+        ]
+      }
+    ]
+  },
+
+  "anuncios_recompensados": {
+    "_regra": "Sempre opcionais. Nunca há anúncio forçado.",
+    "producao_dobrada": { "multiplicador": 2.0, "minutos_por_anuncio": 30, "minutos_maximos_acumulados": 240 },
+    "dobrar_ganho_offline": { "multiplicador": 2.0 },
+    "limite_por_dia": 10
+  },
+
+  "cristais": {
+    "_regra": "Moeda premium. Saldo existe SÓ no servidor; o app apenas exibe.",
+    "ganho_gratis": {
+      "missao_diaria": 5,
+      "conquista": [10, 25],
+      "chegar_em_planeta_novo": 50
+    },
+    "usos": {
+      "salto_no_tempo_2h": 40,
+      "skin_comum": 150,
+      "skin_rara": 400
+    }
+  },
+
+  "anti_trapaca": {
+    "_regra": "Usado pelo servidor. Se o ganho reportado passar do máximo possível x tolerância, a conta é sinalizada (não banida automaticamente).",
+    "tolerancia": 1.5
+  }
+}

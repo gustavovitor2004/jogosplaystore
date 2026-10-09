@@ -93,7 +93,7 @@ Volta tudo pra Terra (colônias inclusive) e dá **Poeira Estelar** proporcional
 ## Decisão do Diretor: ✅ APROVADO
 
 ## Próximo passo
-1. Economia: curvas de custo e produção do MVP (Terra, Lua, Marte e colônias).
+1. ~~Economia: curvas de custo e produção do MVP~~ ✅ Feito: ver [economia/ECONOMIA.md](economia/ECONOMIA.md)
 2. Programador Core: projeto Godot e protótipo da Terra.
 3. Cibersegurança + Android + Backend: módulo Security Foundation.
 4. Designer Visual: identidade visual e prompts de ícone e telas.
